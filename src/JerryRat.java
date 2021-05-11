@@ -1,8 +1,11 @@
+import http.EntityBody;
+import http.Response1_0;
+import http.ResponseHead;
+import http.StatusLine;
+
 import java.io.*;
-import java.net.DatagramPacket;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
@@ -10,6 +13,11 @@ public class JerryRat implements Runnable {
 
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
+    public static final String HTTP_VERSION = "HTTP/1.0";
+    public static final String STATUS200 = " 200 OK";
+    public static final String STATUS400 = " 400 Bad Request";
+    public static final String STATUS404 = " 404 Not Found";
+
     ServerSocket serverSocket;
 
     public JerryRat() throws IOException {
@@ -25,76 +33,62 @@ public class JerryRat implements Runnable {
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             ) {
                 String request = in.readLine();
-                while (request != null) {
-                    System.out.println(request);
-                    String entityBody;
-                    String[] req = request.split(" ");
+                System.out.println(request);
 
-                    //Status-Line
-                    out.print("HTTP/1.0 ");
-                    if (!req[0].equals("GET") || req.length < 3 || !req[2].startsWith("HTTP/1.")) {
-                        out.println("400 Bad Request");
-                        break;
-                    }
-//                    String requestMethod = req[0];
-                    String requestURL = req[1];
+                StatusLine statusLine = new StatusLine();
+                ResponseHead responseHead = new ResponseHead();
+                EntityBody entityBody;
+                Response1_0 response = new Response1_0();
 
-                    File requestFile = new File(WEB_ROOT + requestURL);
-                    if (!requestFile.exists()) {
-                        out.println("404 Not Found");
-                        break;
-                    }
-
-                    long contentLength;
-                    String contentType = "html";
-                    long lastModified;
-                    if (requestFile.isDirectory()) {
-                        requestFile = new File(requestFile, "/index.html");
-
-                        if (!requestFile.exists()) {
-                            out.println("404 Not Found");
-                            break;
-                        }
-
-                        contentLength = requestFile.length();
-                        lastModified = requestFile.lastModified();
-
-                        entityBody = getFileContent(requestFile);
-                    } else {
-                        contentLength = requestFile.length();
-                        lastModified = requestFile.lastModified();
-
-                        entityBody = getFileContent(requestFile);
-
-                        String[] urls = requestURL.split("\\.");
-                        int length = urls.length;
-                        if (length > 1) {
-                            contentType = urls[length - 1];
-                        } else {
-                            contentType = "html";
-                        }
-                    }
-                    out.println("200 OK");
-                    //Date头
-                    Date date = new Date();
-                    out.println("Date: " + date);
-                    //Server头
-                    out.println("Server: JerryRat/1.0 (Linux)");
-
-                    //Content-Length头
-                    out.println("Content-Length: " + contentLength);
-
-                    //Content-Type头
-                    out.println("Content-Type: text/" + contentType);
-
-                    //Last-Modified头
-                    out.println("Last-Modified: " + new Date(lastModified));
-
-                    //EntityBody
-                    out.println(entityBody);
-//                    request = in.readLine();
-                    break;
+                String[] req = request.split(" ");
+                //Status-Line
+                statusLine.setHttpVersion(HTTP_VERSION);
+                if (!req[0].equals("GET") || req.length < 3 || !req[2].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+                    statusLine.setStatusCode(STATUS400);
+                    response.setStatusLine(statusLine);
+                    out.println(statusLine);
+                    continue;
                 }
+                String requestURL = req[1];
+                File requestFile = new File(WEB_ROOT + requestURL);
+                if (!requestFile.exists()) {
+                    statusLine.setStatusCode(STATUS404);
+                    response.setStatusLine(statusLine);
+                    out.println(response);
+                    continue;
+                }
+                String contentType = "html";
+                if (requestFile.isDirectory()) {
+                    requestFile = new File(requestFile, "/index.html");
+                    if (!requestFile.exists()) {
+                        statusLine.setStatusCode(STATUS404);
+                        response.setStatusLine(statusLine);
+                        out.println(response);
+                        continue;
+                    }
+                } else {
+                    String[] urls = requestURL.split("\\.");
+                    int length = urls.length;
+                    if (length > 1) {
+                        contentType = urls[length - 1];
+                    }
+                }
+                statusLine.setStatusCode(STATUS200);
+                //Date头
+                responseHead.setDate(new Date());
+                //Server头
+                responseHead.setServer("JerryRat/1.0 (Linux)");
+                //Content-Length头
+                responseHead.setContentLength(requestFile.length());
+                //Content-Type头
+                responseHead.setContentType("text/" + contentType);
+                //Last-Modified头
+                responseHead.setLastModified(requestFile.lastModified());
+                //EntityBody
+                entityBody = new EntityBody(getFileContent(requestFile));
+
+                response = new Response1_0(statusLine, responseHead, entityBody);
+                out.println(response);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.err.println("TCP连接错误！");
