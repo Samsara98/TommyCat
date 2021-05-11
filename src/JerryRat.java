@@ -29,19 +29,15 @@ public class JerryRat implements Runnable {
                     System.out.println(request);
                     String entityBody;
                     String[] req = request.split(" ");
-                    String requestMethod = req[0];
 
                     //Status-Line
                     out.print("HTTP/1.0 ");
-                    if (!requestMethod.equals("GET")) {
+                    if (!req[0].equals("GET") || req.length < 3 || !req[2].startsWith("HTTP/1.")) {
                         out.println("400 Bad Request");
                         break;
                     }
+//                    String requestMethod = req[0];
                     String requestURL = req[1];
-                    if (req.length < 3 || !req[2].startsWith("HTTP/1.")) {
-                        out.println("400 Bad Request");
-                        break;
-                    }
 
                     File requestFile = new File(WEB_ROOT + requestURL);
                     if (!requestFile.exists()) {
@@ -50,31 +46,26 @@ public class JerryRat implements Runnable {
                     }
 
                     long contentLength;
-                    String contentType;
+                    String contentType = "html";
                     long lastModified;
                     if (requestFile.isDirectory()) {
                         requestFile = new File(requestFile, "/index.html");
-
-                        contentLength = requestFile.length();
-                        lastModified = requestFile.lastModified();
 
                         if (!requestFile.exists()) {
                             out.println("404 Not Found");
                             break;
                         }
-                        FileReader fos = new FileReader(requestFile);
-                        char[] content = new char[(int) requestFile.length()];
-                        fos.read(content);
-                        entityBody = String.valueOf(content);
-                        contentType = "html";
+
+                        contentLength = requestFile.length();
+                        lastModified = requestFile.lastModified();
+
+                        entityBody = getFileContent(requestFile);
                     } else {
                         contentLength = requestFile.length();
                         lastModified = requestFile.lastModified();
 
-                        FileReader fos = new FileReader(requestFile);
-                        char[] content = new char[(int) requestFile.length()];
-                        fos.read(content);
-                        entityBody = String.valueOf(content);
+                        entityBody = getFileContent(requestFile);
+
                         String[] urls = requestURL.split("\\.");
                         int length = urls.length;
                         if (length > 1) {
@@ -101,13 +92,21 @@ public class JerryRat implements Runnable {
 
                     //EntityBody
                     out.println(entityBody);
-                    request = in.readLine();
+//                    request = in.readLine();
+                    break;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 System.err.println("TCP连接错误！");
             }
         }
+    }
+
+    private String getFileContent(File requestFile) throws IOException {
+        FileReader fos = new FileReader(requestFile);
+        char[] content = new char[(int) requestFile.length()];
+        fos.read(content);
+        return String.valueOf(content);
     }
 
     public static void main(String[] args) throws IOException {
