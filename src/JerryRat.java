@@ -26,6 +26,7 @@ public class JerryRat implements Runnable {
             ) {
                 String request = in.readLine();
                 while (request != null) {
+                    System.out.println(request);
                     String entityBody;
                     String[] req = request.split(" ");
                     String requestMethod = req[0];
