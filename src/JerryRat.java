@@ -35,15 +35,18 @@ public class JerryRat implements Runnable {
                     out.print("HTTP/1.0 ");
                     if (!requestMethod.equals("GET")) {
                         out.println("400 Bad Request");
-                        request = in.readLine();
-                        continue;
+                        break;
                     }
                     String requestURL = req[1];
+                    if (req.length < 3 || !req[2].startsWith("HTTP/1.")) {
+                        out.println("400 Bad Request");
+                        break;
+                    }
+
                     File requestFile = new File(WEB_ROOT + requestURL);
                     if (!requestFile.exists()) {
                         out.println("404 Not Found");
-                        request = in.readLine();
-                        continue;
+                        break;
                     }
 
                     long contentLength;
@@ -57,8 +60,7 @@ public class JerryRat implements Runnable {
 
                         if (!requestFile.exists()) {
                             out.println("404 Not Found");
-                            request = in.readLine();
-                            continue;
+                            break;
                         }
                         FileReader fos = new FileReader(requestFile);
                         char[] content = new char[(int) requestFile.length()];
