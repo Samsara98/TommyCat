@@ -25,13 +25,13 @@ public class EchoServer implements Runnable {
                 String[] req = request.split(" ");
                 String requestMethod = req[0];
                 if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
-                    System.err.println("请求错误！");
+                    System.out.println(request);
                     break;
                 }
                 String requestPath = req[1];
                 File requestFile = new File(WEBROOT + requestPath);
                 if (requestFile.isDirectory()) {
-                    requestFile = new File(WEBROOT + requestPath + "/index.html");
+                    requestFile = new File(requestFile.getAbsolutePath() + "/index.html");
                     FileReader fos = new FileReader(requestFile);
                     char[] content = new char[(int) requestFile.length()];
                     fos.read(content);
