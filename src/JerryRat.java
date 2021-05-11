@@ -43,7 +43,7 @@ public class JerryRat implements Runnable {
                 String[] req = request.split(" ");
                 //Status-Line
                 statusLine.setHttpVersion(HTTP_VERSION);
-                if (!req[0].equals("GET") || req.length < 3 || !req[2].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+                if (!req[0].equals("GET") || req.length < 3 || !req[2].toUpperCase(Locale.ROOT).equals(HTTP_VERSION)) {
                     statusLine.setStatusCode(STATUS400);
                     response.setStatusLine(statusLine);
                     out.println(statusLine);
