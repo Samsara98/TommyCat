@@ -5,7 +5,7 @@ import java.util.Locale;
 
 public class EchoServer implements Runnable {
     public static final String SERVER_PORT = "8080";
-    public static final String WEBROOT = "res/webroot";
+    public static final String WEB_ROOT = "res/webroot";
     ServerSocket serverSocket;
 
     public EchoServer() throws IOException {
@@ -29,7 +29,7 @@ public class EchoServer implements Runnable {
                     continue;
                 }
                 String requestPath = req[1];
-                File requestFile = new File(WEBROOT + requestPath);
+                File requestFile = new File(WEB_ROOT + requestPath);
                 if (requestFile.isDirectory()) {
                     requestFile = new File(requestFile.getAbsolutePath() + "/index.html");
                     FileReader fos = new FileReader(requestFile);
@@ -47,7 +47,6 @@ public class EchoServer implements Runnable {
                 request = in.readLine();
             }
         } catch (IOException e) {
-            e.printStackTrace();
             System.err.println("TCP连接错误！");
         }
     }
