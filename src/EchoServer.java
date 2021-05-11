@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Locale;
 
 public class EchoServer implements Runnable {
@@ -25,8 +26,9 @@ public class EchoServer implements Runnable {
                 String[] req = request.split(" ");
                 String requestMethod = req[0];
                 if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
-                    System.out.println(request);
-                    break;
+                    out.println("error!");
+                    request = in.readLine();
+                    continue;
                 }
                 String requestPath = req[1];
                 File requestFile = new File(WEBROOT + requestPath);
