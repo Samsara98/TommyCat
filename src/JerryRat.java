@@ -53,7 +53,6 @@ public class JerryRat implements Runnable {
 
     public static void main(String[] args) throws IOException {
         JerryRat jerryRat = new JerryRat();
-
         new Thread(jerryRat).start();
     }
 }
