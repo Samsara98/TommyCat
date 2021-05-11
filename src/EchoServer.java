@@ -24,8 +24,8 @@ public class EchoServer implements Runnable {
                 String entityBody = "";
                 String[] req = request.split(" ");
                 String requestMethod = req[0];
-                if (!requestMethod.toLowerCase(Locale.ROOT).equals("get") || req.length < 2) {
-                    System.err.println("错误的请求方法！");
+                if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
+                    System.err.println("请求错误！");
                     break;
                 }
                 String requestPath = req[1];
