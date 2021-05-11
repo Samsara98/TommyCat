@@ -1,8 +1,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Locale;
 
 public class EchoServer implements Runnable {
     public static final String SERVER_PORT = "8080";
@@ -25,7 +24,7 @@ public class EchoServer implements Runnable {
                 String entityBody = "";
                 String[] req = request.split(" ");
                 String requestMethod = req[0];
-                if (!requestMethod.equals("get") || req.length < 2) {
+                if (!requestMethod.toLowerCase(Locale.ROOT).equals("get") || req.length < 2) {
                     System.err.println("错误的请求方法！");
                     break;
                 }
