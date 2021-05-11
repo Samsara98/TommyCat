@@ -25,7 +25,7 @@ public class EchoServer implements Runnable {
                 String entityBody = "";
                 String[] req = request.split(" ");
                 String requestMethod = req[0];
-                if (!requestMethod.equals("GET") || req.length < 2) {
+                if (!requestMethod.equals("get") || req.length < 2) {
                     System.err.println("错误的请求方法！");
                     break;
                 }
