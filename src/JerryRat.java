@@ -6,13 +6,8 @@ public class JerryRat implements Runnable {
         System.out.println("I'm Jerry the rat!");
     }
 
-    public static void main(String[] args){
-        EchoServer echoServer = null;
-        try {
-            echoServer = new EchoServer();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        echoServer.run();
+    public static void main(String[] args) throws IOException{
+        EchoServer echoServer = new EchoServer();
+        new Thread(echoServer).run();
     }
 }
