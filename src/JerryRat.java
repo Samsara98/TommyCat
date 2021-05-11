@@ -2,7 +2,7 @@ import java.io.IOException;
 
 public class JerryRat implements Runnable {
     @Override
-    public void run() {
+    public void run(){
         System.out.println("I'm Jerry the rat!");
         EchoServer echoServer = null;
         try {
