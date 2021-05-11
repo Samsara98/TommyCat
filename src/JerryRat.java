@@ -15,39 +15,41 @@ public class JerryRat implements Runnable {
 
     @Override
     public void run() {
-        try (
-                Socket clientSocket = serverSocket.accept();
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        ) {
-            String request = in.readLine();
-            while (request != null) {
-                String[] req = request.split(" ");
-                String requestMethod = req[0];
-                if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
-                    break;
+        while (true){
+            try (
+                    Socket clientSocket = serverSocket.accept();
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            ) {
+                String request = in.readLine();
+                while (request != null) {
+                    String[] req = request.split(" ");
+                    String requestMethod = req[0];
+                    if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
+                        break;
 //                    request = in.readLine();
 //                    continue;
+                    }
+                    String requestPath = req[1];
+                    File requestFile = new File(WEB_ROOT + requestPath);
+                    if (requestFile.isDirectory()) {
+                        requestFile = new File(requestFile, "/index.html");
+                        FileReader fos = new FileReader(requestFile);
+                        char[] content = new char[(int) requestFile.length()];
+                        fos.read(content);
+                        out.println(String.valueOf(content));
+                    } else {
+                        FileReader fos = new FileReader(requestFile);
+                        char[] content = new char[(int) requestFile.length()];
+                        fos.read(content);
+                        out.println(String.valueOf(content));
+                    }
+                    request = in.readLine();
                 }
-                String requestPath = req[1];
-                File requestFile = new File(WEB_ROOT + requestPath);
-                if (requestFile.isDirectory()) {
-                    requestFile = new File(requestFile, "/index.html");
-                    FileReader fos = new FileReader(requestFile);
-                    char[] content = new char[(int) requestFile.length()];
-                    fos.read(content);
-                    out.println(String.valueOf(content));
-                } else {
-                    FileReader fos = new FileReader(requestFile);
-                    char[] content = new char[(int) requestFile.length()];
-                    fos.read(content);
-                    out.println(String.valueOf(content));
-                }
-                request = in.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.err.println("TCP连接错误！");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("TCP连接错误！");
         }
     }
 
