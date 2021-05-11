@@ -21,10 +21,10 @@ public class EchoServer implements Runnable {
         ) {
             String request = in.readLine();
             while (request != null) {
-                String entityBody = "";
+                String entityBody;
                 String[] req = request.split(" ");
                 String requestMethod = req[0];
-                if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
+                if (!requestMethod.equals("get")) {
                     System.err.println("请求错误！");
                     break;
                 }
