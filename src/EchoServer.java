@@ -21,8 +21,10 @@ public class EchoServer implements Runnable {
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         ) {
             String line = in.readLine();
+            int i = 1;
             while (line != null) {
-                out.println("1. " + line);
+                out.println(i + ". " + line);
+                i++;
                 line = in.readLine();
             }
         } catch (IOException e) {
