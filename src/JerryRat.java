@@ -10,7 +10,7 @@ public class JerryRat implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        new Thread(echoServer).start();
+        new Thread(echoServer).run();
     }
 
     public static void main(String[] args){
