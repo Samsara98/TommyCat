@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 public class JerryRat implements Runnable {
     @Override
     public void run() {
@@ -5,7 +7,12 @@ public class JerryRat implements Runnable {
     }
 
     public static void main(String[] args){
-        JerryRat jerryRat = new JerryRat();
-        jerryRat.run();
+        EchoServer echoServer = null;
+        try {
+            echoServer = new EchoServer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        echoServer.run();
     }
 }
