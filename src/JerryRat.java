@@ -42,6 +42,8 @@ public class JerryRat implements Runnable {
                     File requestFile = new File(WEB_ROOT + requestURL);
                     if (!requestFile.exists()) {
                         out.println("404 Not Found");
+                        request = in.readLine();
+                        continue;
                     }
 
                     long contentLength;
