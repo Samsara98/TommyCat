@@ -1,6 +1,9 @@
 import java.io.*;
+import java.net.DatagramPacket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 public class JerryRat implements Runnable {
@@ -15,7 +18,7 @@ public class JerryRat implements Runnable {
 
     @Override
     public void run() {
-        while (true){
+        while (true) {
             try (
                     Socket clientSocket = serverSocket.accept();
                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -23,27 +26,76 @@ public class JerryRat implements Runnable {
             ) {
                 String request = in.readLine();
                 while (request != null) {
+                    String entityBody;
                     String[] req = request.split(" ");
                     String requestMethod = req[0];
-                    if (!requestMethod.toLowerCase(Locale.ROOT).equals("get")) {
-                        break;
-//                    request = in.readLine();
-//                    continue;
+
+                    //Status-Line
+                    out.print("HTTP/1.0 ");
+                    if (!requestMethod.equals("GET")) {
+                        out.println("400 Bad Request");
+                        request = in.readLine();
+                        continue;
                     }
-                    String requestPath = req[1];
-                    File requestFile = new File(WEB_ROOT + requestPath);
+                    String requestURL = req[1];
+                    File requestFile = new File(WEB_ROOT + requestURL);
+                    if (!requestFile.exists()) {
+                        out.println("404 Not Found");
+                    }
+
+                    long contentLength;
+                    String contentType;
+                    long lastModified;
                     if (requestFile.isDirectory()) {
                         requestFile = new File(requestFile, "/index.html");
+
+                        contentLength = requestFile.length();
+                        lastModified = requestFile.lastModified();
+
+                        if (!requestFile.exists()) {
+                            out.println("404 Not Found");
+                            request = in.readLine();
+                            continue;
+                        }
                         FileReader fos = new FileReader(requestFile);
                         char[] content = new char[(int) requestFile.length()];
                         fos.read(content);
-                        out.println(String.valueOf(content));
+                        entityBody = String.valueOf(content);
+                        contentType = "html";
                     } else {
+                        contentLength = requestFile.length();
+                        lastModified = requestFile.lastModified();
+
                         FileReader fos = new FileReader(requestFile);
                         char[] content = new char[(int) requestFile.length()];
                         fos.read(content);
-                        out.println(String.valueOf(content));
+                        entityBody = String.valueOf(content);
+                        String[] urls = requestURL.split("\\.");
+                        int length = urls.length;
+                        if (length > 1) {
+                            contentType = urls[length - 1];
+                        } else {
+                            contentType = "html";
+                        }
                     }
+                    out.println("200 OK");
+                    //Date头
+                    Date date = new Date();
+                    out.println("Date: " + date);
+                    //Server头
+                    out.println("Server: JerryRat/1.0 (Linux)");
+
+                    //Content-Length头
+                    out.println("Content-Length: " + contentLength);
+
+                    //Content-Type头
+                    out.println("Content-Type: text/" + contentType);
+
+                    //Last-Modified头
+                    out.println("Last-Modified: " + new Date(lastModified));
+
+                    //EntityBody
+                    out.println(entityBody);
                     request = in.readLine();
                 }
             } catch (IOException e) {
