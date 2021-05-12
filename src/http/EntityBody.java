@@ -1,7 +1,5 @@
 package http;
 
-import java.util.Date;
-
 public class EntityBody<T> {
 
     T entityBody;
