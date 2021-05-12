@@ -1,5 +1,6 @@
 package http;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ResponseHead {
@@ -51,10 +52,11 @@ public class ResponseHead {
 
     @Override
     public String toString() {
-        return "Date: " + date + "\r\n" +
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+        return "Date: " + sdf.format(date) + "\r\n" +
                 "Server: " + server + "\r\n" +
                 "Content-Length: " + contentLength + "\r\n" +
                 "Content-Type: " + contentType + "\r\n" +
-                "Last-Modified: " + lastModified + "\r\n";
+                "Last-Modified: " + sdf.format(lastModified) + "\r\n";
     }
 }
