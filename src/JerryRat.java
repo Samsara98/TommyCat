@@ -6,8 +6,6 @@ import http.StatusLine;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
@@ -42,6 +40,7 @@ public class JerryRat implements Runnable {
                 Response1_0 response = new Response1_0();
 
                 String[] req = request.split(" ");
+                String requestURL = req[1];
                 //Status-Line
                 statusLine.setHttpVersion(HTTP_VERSION);
                 if (!req[0].equals("GET") || req.length < 3 || !req[2].toUpperCase(Locale.ROOT).equals(HTTP_VERSION)) {
@@ -50,7 +49,6 @@ public class JerryRat implements Runnable {
                     out.println(statusLine);
                     continue;
                 }
-                String requestURL = req[1];
                 File requestFile = new File(WEB_ROOT + requestURL);
                 if (!requestFile.exists()) {
                     statusLine.setStatusCode(STATUS404);
@@ -61,13 +59,13 @@ public class JerryRat implements Runnable {
                 String contentType = "";
                 if (requestFile.isDirectory()) {
                     requestFile = new File(requestFile, "/index.html");
-                    contentType = "html";
                     if (!requestFile.exists()) {
                         statusLine.setStatusCode(STATUS404);
                         response.setStatusLine(statusLine);
                         out.println(response);
                         continue;
                     }
+                    contentType = "text/html";
                 } else {
                     String[] urls = requestURL.split("\\.");
                     int length = urls.length;
