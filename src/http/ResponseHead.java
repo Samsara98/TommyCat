@@ -2,6 +2,7 @@ package http;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class ResponseHead {
     Date date;
@@ -53,6 +54,7 @@ public class ResponseHead {
     @Override
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
         return "Date: " + sdf.format(date) + "\r\n" +
                 "Server: " + server + "\r\n" +
                 "Content-Length: " + contentLength + "\r\n" +

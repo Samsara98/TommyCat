@@ -101,12 +101,12 @@ public class JerryRat implements Runnable {
         }
     }
 
-    private String getFileContent(File requestFile) throws IOException {
+    private byte[] getFileContent(File requestFile) throws IOException {
         FileInputStream fos = new FileInputStream(requestFile);
         BufferedInputStream bis = new BufferedInputStream(fos);
         byte[] content = new byte[(int) requestFile.length()];
         bis.read(content);
-        return new String(content);
+        return content;
 
     }
 

@@ -1,5 +1,8 @@
 package http;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 public class EntityBody<T> {
 
     T entityBody;
@@ -18,6 +21,9 @@ public class EntityBody<T> {
 
     @Override
     public String toString() {
+        if (entityBody.getClass().isArray()) {
+            return new String((byte[]) entityBody);
+        }
         return entityBody.toString();
     }
 }
