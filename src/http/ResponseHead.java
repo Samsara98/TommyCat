@@ -51,10 +51,10 @@ public class ResponseHead {
 
     @Override
     public String toString() {
-        return "Date: " + date + "\n" +
-                "Server: " + server + "\n" +
-                "Content-Length: " + contentLength + "\n" +
-                "Content-Type: " + contentType + "\n" +
-                "Last-Modified: " + lastModified + "\n";
+        return "Date: " + date + "\r\n" +
+                "Server: " + server + "\r\n" +
+                "Content-Length: " + contentLength + "\r\n" +
+                "Content-Type: " + contentType + "\r\n" +
+                "Last-Modified: " + lastModified + "\r\n";
     }
 }

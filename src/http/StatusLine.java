@@ -23,6 +23,6 @@ public class StatusLine {
 
     @Override
     public String toString() {
-        return httpVersion + statusCode + "\n";
+        return httpVersion + statusCode + "\r\n";
     }
 }
