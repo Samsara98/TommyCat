@@ -44,6 +44,9 @@ public class JerryRat implements Runnable {
                 Response1_0 response = new Response1_0();
 
                 String[] req = request.split(" ");
+                if(req.length<2){
+                    continue;
+                }
                 String requestURL = req[1];
                 //Status-Line
                 statusLine.setHttpVersion(HTTP_VERSION);
@@ -93,7 +96,7 @@ public class JerryRat implements Runnable {
                 entityBody = new EntityBody(getFileContent(requestFile));
 
                 response = new Response1_0(statusLine, responseHead, entityBody);
-                out.println(response);
+                out.print(response);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.err.println("TCP连接错误！");
