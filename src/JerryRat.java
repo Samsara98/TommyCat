@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
@@ -93,7 +94,7 @@ public class JerryRat implements Runnable {
                             contentType = "image/png";
                             break;
                         default:
-                            contentType = "application/octet-stream";
+                            contentType = "application/x-";
                     }
                 }
                 statusLine.setStatusCode(STATUS200);
@@ -119,28 +120,12 @@ public class JerryRat implements Runnable {
         }
     }
 
-    private String getFileContent(File requestFile) throws IOException{
-//        StringBuilder line = new StringBuilder();
-//        try (
-//                FileInputStream fr = new FileInputStream(requestFile);
-//                BufferedReader br = new BufferedReader(new InputStreamReader(fr));
-//        ){
-//            String rl;
-//            while (true) {
-//                rl = br.readLine();
-//                if (null == rl)
-//                    break;
-//                line.append(rl);
-//            }
-//        } catch(IOException e){
-//            e.printStackTrace();
-//        }
-//        System.out.println(line);
-//        return line.toString();
-        FileReader fos = new FileReader(requestFile);
-        char[] content = new char[(int) requestFile.length()];
-        fos.read(content);
-        return String.valueOf(content);
+    private String getFileContent(File requestFile) throws IOException {
+        FileInputStream fos = new FileInputStream(requestFile);
+        BufferedInputStream bis = new BufferedInputStream(fos);
+        byte[] content = new byte[(int) requestFile.length()];
+        bis.read(content);
+        return new String(content);
 
     }
 
