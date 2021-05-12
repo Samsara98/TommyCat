@@ -27,7 +27,7 @@
 .dib 	application/x-dib 	.dll 	application/x-msdownload
 .doc 	application/msword 	.dot 	application/msword
 .drw 	application/x-drw 	.dtd 	text/xml
-.dwf 	Model/vnd.dwf 	.dwf 	application/x-dwf
+.dwf 	Model/vnd.dwf
 .dwg 	application/x-dwg 	.dxb 	application/x-dxb
 .dxf 	application/x-dxf 	.edn 	application/vnd.adobe.edn
 .emf 	application/x-emf 	.eml 	message/rfc822
@@ -54,7 +54,7 @@
 .java 	java/* 	.jfif 	image/jpeg
 .jpe 	image/jpeg 	.jpe 	application/x-jpe
 .jpeg 	image/jpeg 	.jpg 	image/jpeg
-.jpg 	application/x-jpg 	.js 	application/x-javascript
+.js 	application/x-javascript
 .jsp 	text/html 	.la1 	audio/x-liquid-file
 .lar 	application/x-laplayer-reg 	.latex 	application/x-latex
 .lavs 	audio/x-liquid-secure 	.lbm 	application/x-lbm
@@ -94,7 +94,7 @@
 .pko 	application/vnd.ms-pki.pko 	.pl 	application/x-perl
 .plg 	text/html 	.pls 	audio/scpls
 .plt 	application/x-plt 	.png 	image/png
-.png 	application/x-png 	.pot 	application/vnd.ms-powerpoint
+.pot 	application/vnd.ms-powerpoint
 .ppa 	application/vnd.ms-powerpoint 	.ppm 	application/x-ppm
 .pps 	application/vnd.ms-powerpoint 	.ppt 	application/vnd.ms-powerpoint
 .ppt 	application/x-ppt 	.pr 	application/x-pr

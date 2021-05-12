@@ -97,6 +97,7 @@ public class JerryRat implements Runnable {
 
                 response = new Response1_0(statusLine, responseHead, entityBody);
                 out.print(response);
+                out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
                 System.err.println("TCP连接错误！");
@@ -126,6 +127,9 @@ public class JerryRat implements Runnable {
                 }
                 String[] lines = line.split(" ");
                 for (int i = 0; i < lines.length; i += 2) {
+                    if(map.containsKey(lines[i].strip())){
+                        System.out.println(lines[i].strip());
+                    }
                     map.put(lines[i].strip(), lines[i + 1].strip());
                 }
             }
