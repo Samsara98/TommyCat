@@ -60,7 +60,7 @@ public class JerryRat implements Runnable {
                     out.println(response);
                     continue;
                 }
-                String contentType = "html";
+                String contentType = "";
                 if (requestFile.isDirectory()) {
                     requestFile = new File(requestFile, "/index.html");
                     if (!requestFile.exists()) {
@@ -69,6 +69,7 @@ public class JerryRat implements Runnable {
                         out.println(response);
                         continue;
                     }
+                    contentType = "html";
                 } else {
                     String[] urls = requestURL.split("\\.");
                     int length = urls.length;
@@ -76,7 +77,6 @@ public class JerryRat implements Runnable {
                         contentType = urls[length - 1];
                     }
                 }
-                System.out.println(contentType);
                 contentType = getContentType("." + contentType);
                 statusLine.setStatusCode(STATUS200);
                 //Date头
