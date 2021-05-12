@@ -1,8 +1,13 @@
 package http;
 
+
 public class StatusLine {
     String httpVersion;
     String statusCode;
+
+    public StatusLine() {
+        this.httpVersion = "HTTP/1.0";
+    }
 
 
     public String getHttpVersion() {

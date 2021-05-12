@@ -6,10 +6,7 @@ import http.StatusLine;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class JerryRat implements Runnable {
 
@@ -37,65 +34,40 @@ public class JerryRat implements Runnable {
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             ) {
                 String request = in.readLine();
-
-                StatusLine statusLine = new StatusLine();
-                ResponseHead responseHead = new ResponseHead();
-                EntityBody entityBody;
                 Response1_0 response = new Response1_0();
-
-                String[] req = request.split(" ");
-                if(req.length<2){
-                    continue;
-                }
-                String requestURL = req[1];
-                //Status-Line
-                statusLine.setHttpVersion(HTTP_VERSION);
-                if (!req[0].equals("GET") || req.length < 3 || !req[2].toUpperCase(Locale.ROOT).equals(HTTP_VERSION)) {
-                    statusLine.setStatusCode(STATUS400);
-                    response.setStatusLine(statusLine);
-                    out.println(statusLine);
-                    continue;
-                }
-                File requestFile = new File(WEB_ROOT + requestURL);
-                if (!requestFile.exists()) {
-                    statusLine.setStatusCode(STATUS404);
-                    response.setStatusLine(statusLine);
-                    out.println(response);
-                    continue;
-                }
-                String contentType = "";
-                if (requestFile.isDirectory()) {
-                    requestFile = new File(requestFile, "/index.html");
-                    if (!requestFile.exists()) {
-                        statusLine.setStatusCode(STATUS404);
-                        response.setStatusLine(statusLine);
-                        out.println(response);
-                        continue;
+                while (true) {
+                    StatusLine statusLine = new StatusLine();
+                    String[] req = request.split(" ");
+                    if (request.length() == 0) {
+                        break;
                     }
-                    contentType = "html";
-                } else {
-                    String[] urls = requestURL.split("\\.");
-                    int length = urls.length;
-                    if (length > 1) {
-                        contentType = urls[length - 1];
+                    request = in.readLine();
+                    String requestHead = req[0];
+                    if ("GET".equals(requestHead)) {
+                        String contentType = "";
+                        String requestURL = checkRequest(out, req);
+                        if (requestURL == null) break;
+                        if (requestURL.equals("/endpoints/user-agent")) {
+                            continue;
+                        }
+                        File requestFile = new File(WEB_ROOT + requestURL);
+                        requestFile = getFile(out, requestFile);
+                        if (requestFile == null) break;
+
+                        contentType = getRequestFileType(contentType, requestURL, requestFile);
+
+                        response = getResponse1_0(statusLine, requestFile, contentType);
+                    } else if (requestHead.equals("User-Agent:")) {
+                        statusLine.setStatusCode(STATUS200);
+                        String fieldValue = req[1];
+                        response = new Response1_0();
+                        response.setEntityBody(new EntityBody(fieldValue));
+                    } else {
+                        out.print(getErrorResponse(STATUS400));
+                        out.flush();
+                        break;
                     }
                 }
-                contentType = getContentType("." + contentType);
-                statusLine.setStatusCode(STATUS200);
-                //Date头
-                responseHead.setDate(new Date());
-                //Server头
-                responseHead.setServer("JerryRat/1.0 (Linux)");
-                //Content-Length头
-                responseHead.setContentLength(requestFile.length());
-                //Content-Type头
-                responseHead.setContentType(contentType);
-                //Last-Modified头
-                responseHead.setLastModified(requestFile.lastModified());
-                //EntityBody
-                entityBody = new EntityBody(getFileContent(requestFile));
-
-                response = new Response1_0(statusLine, responseHead, entityBody);
                 out.print(response);
                 out.flush();
             } catch (IOException e) {
@@ -103,6 +75,78 @@ public class JerryRat implements Runnable {
                 System.err.println("TCP连接错误！");
             }
         }
+    }
+
+    private String checkRequest(PrintWriter out, String[] req) {
+        String requestURL;
+        String httpVersion;
+        if (req.length <= 1) {
+            out.print(getErrorResponse(STATUS400));
+            out.flush();
+            return null;
+        }
+        requestURL = req[1];
+        if (req.length >= 3) {
+            httpVersion = req[2];
+            if (!httpVersion.toUpperCase(Locale.ROOT).equals(HTTP_VERSION)) {
+                out.print(getErrorResponse(STATUS400));
+                out.flush();
+                return null;
+            }
+        }
+        return requestURL;
+    }
+
+    private String getRequestFileType(String contentType, String requestURL, File requestFile) {
+        if (requestFile.getName().endsWith("html")) {
+            contentType = "html";
+        }
+        String[] urls = requestURL.split("\\.");
+        int length = urls.length;
+        if (length > 1) {
+            contentType = urls[length - 1];
+        }
+        return contentType;
+    }
+
+    private File getFile(PrintWriter out, File requestFile) {
+        if (!requestFile.exists()) {
+            out.print(getErrorResponse(STATUS404));
+            out.flush();
+            return null;
+        }
+        if (requestFile.isDirectory()) {
+            requestFile = new File(requestFile, "/index.html");
+            if (!requestFile.exists()) {
+                out.print(getErrorResponse(STATUS404));
+                out.flush();
+                return null;
+            }
+        }
+        return requestFile;
+    }
+
+    private Response1_0 getResponse1_0(StatusLine statusLine, File requestFile, String contentType) throws IOException {
+        ResponseHead responseHead = new ResponseHead();
+        Response1_0 response;
+        EntityBody entityBody;
+        contentType = getContentType("." + contentType);
+        //Status-Line
+        statusLine.setStatusCode(STATUS200);
+        //Date头
+        responseHead.setDate(new Date());
+        //Server头
+        responseHead.setServer("JerryRat/1.0 (Linux)");
+        //Content-Length头
+        responseHead.setContentLength(requestFile.length());
+        //Content-Type头
+        responseHead.setContentType(contentType);
+        //Last-Modified头
+        responseHead.setLastModified(requestFile.lastModified());
+        //EntityBody
+        entityBody = new EntityBody(getFileContent(requestFile));
+        response = new Response1_0(statusLine, responseHead, entityBody);
+        return response;
     }
 
     private byte[] getFileContent(File requestFile) throws IOException {
@@ -127,9 +171,6 @@ public class JerryRat implements Runnable {
                 }
                 String[] lines = line.split(" ");
                 for (int i = 0; i < lines.length; i += 2) {
-                    if(map.containsKey(lines[i].strip())){
-                        System.out.println(lines[i].strip());
-                    }
                     map.put(lines[i].strip(), lines[i + 1].strip());
                 }
             }
@@ -139,6 +180,21 @@ public class JerryRat implements Runnable {
             return map.get(content);
         }
 
+    }
+
+    private Response1_0 getErrorResponse(String statusCode) {
+        StatusLine statusLine = new StatusLine();
+        Response1_0 response1_0 = new Response1_0();
+        switch (statusCode) {
+            case STATUS400:
+                statusLine.setStatusCode(STATUS400);
+                break;
+            case STATUS404:
+                statusLine.setStatusCode(STATUS404);
+                break;
+        }
+        response1_0.setStatusLine(statusLine);
+        return response1_0;
     }
 
     public static void main(String[] args) throws IOException {
