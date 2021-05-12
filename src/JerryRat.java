@@ -51,16 +51,19 @@ public class JerryRat implements Runnable {
                             continue;
                         }
                         File requestFile = new File(WEB_ROOT + requestURL);
-                        requestFile = getFile(out, requestFile);
+                        requestFile = getFileName(out, requestFile);
+                        //HTTP 0.9
                         if (requestFile == null) break;
-
+                        if (req.length == 2) {
+                            response.setEntityBody(new EntityBody(getFileContent(requestFile)));
+                            break;
+                        }
                         contentType = getRequestFileType(contentType, requestURL, requestFile);
 
                         response = getResponse1_0(statusLine, requestFile, contentType);
                     } else if (requestHead.equals("User-Agent:")) {
                         statusLine.setStatusCode(STATUS200);
                         String fieldValue = req[1];
-                        response = new Response1_0();
                         response.setEntityBody(new EntityBody(fieldValue));
                     } else {
                         out.print(getErrorResponse(STATUS400));
@@ -109,7 +112,7 @@ public class JerryRat implements Runnable {
         return contentType;
     }
 
-    private File getFile(PrintWriter out, File requestFile) {
+    private File getFileName(PrintWriter out, File requestFile) {
         if (!requestFile.exists()) {
             out.print(getErrorResponse(STATUS404));
             out.flush();
