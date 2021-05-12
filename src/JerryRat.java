@@ -6,6 +6,7 @@ import http.StatusLine;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Locale;
 
@@ -33,7 +34,6 @@ public class JerryRat implements Runnable {
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             ) {
                 String request = in.readLine();
-                System.out.println(request);
 
                 StatusLine statusLine = new StatusLine();
                 ResponseHead responseHead = new ResponseHead();
@@ -57,9 +57,10 @@ public class JerryRat implements Runnable {
                     out.println(response);
                     continue;
                 }
-                String contentType = "html";
+                String contentType = "";
                 if (requestFile.isDirectory()) {
                     requestFile = new File(requestFile, "/index.html");
+                    contentType = "html";
                     if (!requestFile.exists()) {
                         statusLine.setStatusCode(STATUS404);
                         response.setStatusLine(statusLine);
@@ -72,6 +73,28 @@ public class JerryRat implements Runnable {
                     if (length > 1) {
                         contentType = urls[length - 1];
                     }
+                    switch (contentType) {
+                        case "html":
+                            contentType = "text/html";
+                            break;
+                        case "txt":
+                            contentType = "text/plain";
+                            break;
+                        case "xml":
+                            contentType = "text/xml";
+                            break;
+                        case "gif":
+                            contentType = "image/gif";
+                            break;
+                        case "jpg":
+                            contentType = "image/jpeg";
+                            break;
+                        case "png":
+                            contentType = "image/png";
+                            break;
+                        default:
+                            contentType = "application/octet-stream";
+                    }
                 }
                 statusLine.setStatusCode(STATUS200);
                 //Date头
@@ -81,7 +104,7 @@ public class JerryRat implements Runnable {
                 //Content-Length头
                 responseHead.setContentLength(requestFile.length());
                 //Content-Type头
-                responseHead.setContentType("text/" + contentType);
+                responseHead.setContentType(contentType);
                 //Last-Modified头
                 responseHead.setLastModified(requestFile.lastModified());
                 //EntityBody
@@ -96,11 +119,29 @@ public class JerryRat implements Runnable {
         }
     }
 
-    private String getFileContent(File requestFile) throws IOException {
+    private String getFileContent(File requestFile) throws IOException{
+//        StringBuilder line = new StringBuilder();
+//        try (
+//                FileInputStream fr = new FileInputStream(requestFile);
+//                BufferedReader br = new BufferedReader(new InputStreamReader(fr));
+//        ){
+//            String rl;
+//            while (true) {
+//                rl = br.readLine();
+//                if (null == rl)
+//                    break;
+//                line.append(rl);
+//            }
+//        } catch(IOException e){
+//            e.printStackTrace();
+//        }
+//        System.out.println(line);
+//        return line.toString();
         FileReader fos = new FileReader(requestFile);
         char[] content = new char[(int) requestFile.length()];
         fos.read(content);
         return String.valueOf(content);
+
     }
 
     public static void main(String[] args) throws IOException {
