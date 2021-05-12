@@ -53,10 +53,10 @@ public class ResponseHead {
     @Override
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-        return "Date:" + sdf.format(date) + "\r\n" +
-                "Server:" + server + "\r\n" +
-                "Content-Length:" + contentLength + "\r\n" +
-                "Content-Type:" + contentType + "\r\n" +
-                "Last-Modified:" + sdf.format(lastModified) + "\r\n";
+        return "Date: " + sdf.format(date) + "\r\n" +
+                "Server: " + server + "\r\n" +
+                "Content-Length: " + contentLength + "\r\n" +
+                "Content-Type: " + contentType + "\r\n" +
+                "Last-Modified: " + sdf.format(lastModified) + "\r\n";
     }
 }
