@@ -77,6 +77,7 @@ public class JerryRat implements Runnable {
                         responseHead.setDate(new Date());
                         responseHead.setServer("JerryRat/1.0 (Linux)");
                         responseHead.setContentLength(fieldValue.getBytes().length);
+                        responseHead.setContentType("text/plain");
 
                         response.setStatusLine(statusLine);
                         response.setResponseHead(responseHead);
