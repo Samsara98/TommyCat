@@ -15,7 +15,7 @@ public class JerryRat implements Runnable {
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
     public static final String HTTP_VERSION = "HTTP/1.";
-    public static final Integer TIME_OUT = 30000;
+    public static final Integer TIME_OUT = 20000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS201 = " 201 Created";
@@ -33,7 +33,7 @@ public class JerryRat implements Runnable {
 
     @Override
     public void run() {
-
+        app:
         while (true) {
             try (
                     Socket clientSocket = serverSocket.accept();
@@ -42,18 +42,20 @@ public class JerryRat implements Runnable {
             ) {
                 clientSocket.setSoTimeout(TIME_OUT);
                 String request = in.readLine();
-                Response1_0 response = new Response1_0();
+                Response1_0 response = simpleResponse(STATUS200);
 
                 String requestMethod = "GET";
                 String requestURL = "";
-                int requestContentLength = 0;
+//                String httpVersion = "";
+                int requestContentLength = -1;
                 String requestBody = null;
                 label:
                 while (request != null) {
                     String[] req = request.split(" ");
                     String requestHead = req[0];
+//                    httpVersion = req[req.length-1];
                     if (request.equals("")) {
-                        if (requestBody == null) {
+                        if (requestMethod.equals("POST") && requestBody == null) {
                             requestBody = "";
                             request = in.readLine();
                             req = request.split(" ");
@@ -67,7 +69,7 @@ public class JerryRat implements Runnable {
                         case "HEAD":
                             requestMethod = requestHead;
                             requestURL = checkRequest(out, req);
-                            if (requestURL == null) break label;
+                            if (requestURL == null) continue app;
                             requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                             if (requestURL.equals("/endpoints/user-agent")) {
                                 response.setEntityBody(new EntityBody(request));
@@ -76,18 +78,20 @@ public class JerryRat implements Runnable {
                             }
                             File requestFile = new File(WEB_ROOT + requestURL);
                             requestFile = getFileName(out, requestFile);
-                            if (requestFile == null) break label;
-
+                            if (requestFile == null) continue app;
+                            response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             if ("GET".equals(requestHead)) {
                                 //HTTP 0.9
                                 if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+                                    response = new Response1_0();
                                     response.setEntityBody(new EntityBody(getFileContent(requestFile)));
-                                    break label;
+                                    out.print(response);
+                                    out.flush();
+                                    continue app;
                                 }
                                 EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
                                 response.setEntityBody(entityBody);
                             }
-                            response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             break;
                         case "User-Agent:":
                             getUserAgent(request, response);
@@ -98,10 +102,11 @@ public class JerryRat implements Runnable {
                         case "POST":
                             requestMethod = requestHead;
                             requestURL = req[1];
+                            requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                             if (requestURL.equals("/endpoints/null")) {
                                 response = (simpleResponse(STATUS204));
-                                request = in.readLine();
-                                continue;
+//                                request = in.readLine();
+                                break ;
                             }
                             if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
@@ -117,7 +122,14 @@ public class JerryRat implements Runnable {
                             }
                             break;
                         default:
-                            if (req.length < 2 && requestMethod.equals("POST") && requestBody.equals("")) {
+                            if (req.length < 2 && requestMethod.equals("POST") && requestBody.equals("") ) {
+                                if(requestURL.equals("/endpoints/null")){
+                                    break label;
+                                }
+                                if (requestContentLength <= 0) {
+                                    response = simpleResponse(STATUS400);
+                                    break label;
+                                }
                                 if (requestContentLength < request.length()) {
                                     request = request.substring(0, requestContentLength);
                                 }
@@ -126,8 +138,7 @@ public class JerryRat implements Runnable {
                                 bw.write(request);
                                 bw.flush();
                                 bw.close();
-                                out.print(simpleResponse(STATUS201));
-                                out.flush();
+                                response = simpleResponse(STATUS201);
                                 break label;
                             }
                             break;
@@ -139,6 +150,7 @@ public class JerryRat implements Runnable {
 //                    }
                     request = in.readLine();
                 }
+                response.getResponseHead().setDate(new Date());
                 out.print(response);
                 out.flush();
             } catch (IOException e) {
@@ -146,12 +158,12 @@ public class JerryRat implements Runnable {
                 System.err.println("TCP连接错误！");
             }
         }
+
     }
 
     private void getUserAgent(String request, Response1_0 response) {
         if (response.getEntityBody() != null) {
             String fieldValue = request.substring(12);
-            response = simpleResponse(STATUS200);
             response.getResponseHead().setContentLength(fieldValue.getBytes().length);
 
             if (response.getEntityBody().toString().startsWith("GET")) {
