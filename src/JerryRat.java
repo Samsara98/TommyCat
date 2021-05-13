@@ -46,7 +46,6 @@ public class JerryRat implements Runnable {
                 String requestURL = "";
                 label:
                 while (request != null) {
-                    StatusLine statusLine = new StatusLine();
                     String[] req = request.split(" ");
                     String requestHead = req[0];
                     if (request.equals("")) {
@@ -80,7 +79,7 @@ public class JerryRat implements Runnable {
                             response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             break;
                         case "User-Agent:":
-                            getUserAgent(request, response, statusLine);
+                            getUserAgent(request, response);
                             break;
                         case "POST":
                             requestMethod = requestHead;
@@ -90,9 +89,17 @@ public class JerryRat implements Runnable {
                                 out.flush();
                                 break label;
                             }
-                            File postFile = new File(WEB_ROOT, requestURL);
-                            if (!postFile.exists()) {
-                                postFile.createNewFile();
+                            if (requestURL.startsWith("/emails")) {
+                                File dir = new File(WEB_ROOT, "/emails");
+                                if (!dir.exists()) {
+                                    dir.mkdirs();
+                                }
+                                File postFile = new File(WEB_ROOT, requestURL);
+                                if (!postFile.exists()) {
+                                    postFile.createNewFile();
+                                }
+                            }else {
+                                break label;
                             }
                             break;
                         default:
@@ -123,9 +130,8 @@ public class JerryRat implements Runnable {
         }
     }
 
-    private void getUserAgent(String request, Response1_0 response, StatusLine statusLine) {
+    private void getUserAgent(String request, Response1_0 response) {
         if (response.getEntityBody() != null) {
-
             String fieldValue = request.substring(12);
             response = simpleResponse(STATUS200);
             response.getResponseHead().setContentLength(fieldValue.getBytes().length);
