@@ -2,6 +2,7 @@ import http.EntityBody;
 import http.Response1_0;
 import http.ResponseHead;
 import http.StatusLine;
+import jdk.swing.interop.SwingInterOpUtils;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -14,7 +15,7 @@ public class JerryRat implements Runnable {
 
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
-    public static final String HTTP_VERSION = "HTTP/1.0";
+    public static final String HTTP_VERSION = "HTTP/1.";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS400 = " 400 Bad Request";
     public static final String STATUS404 = " 404 Not Found";
@@ -57,13 +58,12 @@ public class JerryRat implements Runnable {
                         requestFile = getFileName(out, requestFile);
                         if (requestFile == null) break;
 
-                        System.out.println(request);
                         //HTTP 0.9
-                        if (!request.strip().toUpperCase(Locale.ROOT).endsWith(HTTP_VERSION)) {
+                        if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
                             response.setEntityBody(new EntityBody(getFileContent(requestFile)));
                             break;
                         }
-                        contentType = getRequestFileType(contentType, requestURL, requestFile);
+                        contentType = getRequestFileType(contentType, requestFile);
 
                         response = getResponse1_0(statusLine, requestFile, contentType);
                     } else if (requestHead.equals("User-Agent:") && response.getEntityBody().toString().equals("/endpoints/user-agent")) {
@@ -95,7 +95,7 @@ public class JerryRat implements Runnable {
         }
         StringBuilder requestURL = new StringBuilder(req[1]);
         int x = req.length - 1;
-        if (req[req.length - 1].toUpperCase(Locale.ROOT).equals(HTTP_VERSION)) {
+        if (req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
             x = req.length - 2;
         }
         if (req.length >= 3) {
@@ -106,11 +106,8 @@ public class JerryRat implements Runnable {
         return requestURL.toString();
     }
 
-    private String getRequestFileType(String contentType, String requestURL, File requestFile) {
-        if (requestFile.getName().endsWith("html")) {
-            contentType = "html";
-        }
-        String[] urls = requestURL.split("\\.");
+    private String getRequestFileType(String contentType, File requestFile) {
+        String[] urls = requestFile.getName().split("\\.");
         int length = urls.length;
         if (length > 1) {
             contentType = urls[length - 1];
