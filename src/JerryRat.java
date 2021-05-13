@@ -30,6 +30,7 @@ public class JerryRat implements Runnable {
 
     @Override
     public void run() {
+
         while (true) {
             try (
                     Socket clientSocket = serverSocket.accept();
@@ -38,13 +39,13 @@ public class JerryRat implements Runnable {
             ) {
                 String request = in.readLine();
                 Response1_0 response = new Response1_0();
-                while (true) {
+                while (request!=null) {
                     StatusLine statusLine = new StatusLine();
                     String[] req = request.split(" ");
-                    if (request.length() == 0) {
+                    String requestHead = req[0];
+                    if(request.equals("")){
                         break;
                     }
-                    String requestHead = req[0];
                     if ("GET".equals(requestHead)) {
                         String contentType = "";
                         String requestURL = checkRequest(out, req);
@@ -52,7 +53,8 @@ public class JerryRat implements Runnable {
                         requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                         if (requestURL.equals("/endpoints/user-agent")) {
                             response.setEntityBody(new EntityBody("/endpoints/user-agent"));
-                            continue;
+                            request = in.readLine();
+                            continue ;
                         }
                         File requestFile = new File(WEB_ROOT + requestURL);
                         requestFile = getFileName(out, requestFile);
