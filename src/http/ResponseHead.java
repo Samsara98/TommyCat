@@ -52,6 +52,7 @@ public class ResponseHead {
     }
 
     public ResponseHead() {
+        this.date = new Date();
     }
 
     @Override
