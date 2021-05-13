@@ -2,6 +2,7 @@ import http.EntityBody;
 import http.Response1_0;
 import http.ResponseHead;
 import http.StatusLine;
+import jdk.swing.interop.SwingInterOpUtils;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -38,10 +39,10 @@ public class JerryRat implements Runnable {
                 while (true) {
                     StatusLine statusLine = new StatusLine();
                     String[] req = request.split(" ");
+                    System.out.println(Arrays.toString(req));
                     if (request.length() == 0) {
                         break;
                     }
-                    request = in.readLine();
                     String requestHead = req[0];
                     if ("GET".equals(requestHead)) {
                         String contentType = "";
@@ -52,9 +53,11 @@ public class JerryRat implements Runnable {
                         }
                         File requestFile = new File(WEB_ROOT + requestURL);
                         requestFile = getFileName(out, requestFile);
-                        //HTTP 0.9
                         if (requestFile == null) break;
-                        if (req.length == 2) {
+
+                        System.out.println(request);
+                        //HTTP 0.9
+                        if (!request.strip().toUpperCase(Locale.ROOT).endsWith(HTTP_VERSION)) {
                             response.setEntityBody(new EntityBody(getFileContent(requestFile)));
                             break;
                         }
@@ -70,6 +73,7 @@ public class JerryRat implements Runnable {
                         out.flush();
                         break;
                     }
+                    request = in.readLine();
                 }
                 out.print(response);
                 out.flush();
@@ -81,23 +85,19 @@ public class JerryRat implements Runnable {
     }
 
     private String checkRequest(PrintWriter out, String[] req) {
-        String requestURL;
-        String httpVersion;
         if (req.length <= 1) {
             out.print(getErrorResponse(STATUS400));
             out.flush();
             return null;
         }
-        requestURL = req[1];
+        StringBuilder requestURL = new StringBuilder(req[1]);
         if (req.length >= 3) {
-            httpVersion = req[2];
-            if (!httpVersion.toUpperCase(Locale.ROOT).equals(HTTP_VERSION)) {
-                out.print(getErrorResponse(STATUS400));
-                out.flush();
-                return null;
+            for (int i = 2; i < req.length - 1; i++) {
+                requestURL.append(" ").append(req[i]);
             }
         }
-        return requestURL;
+        System.out.println(requestURL);
+        return requestURL.toString();
     }
 
     private String getRequestFileType(String contentType, String requestURL, File requestFile) {
