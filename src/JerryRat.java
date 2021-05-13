@@ -15,7 +15,7 @@ public class JerryRat implements Runnable {
 
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
-    public static final String HTTP_VERSION = "HTTP/1.";
+    public static final String HTTP_VERSION = "HTTP/1.0";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS400 = " 400 Bad Request";
     public static final String STATUS404 = " 404 Not Found";
