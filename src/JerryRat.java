@@ -15,7 +15,7 @@ public class JerryRat implements Runnable {
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
     public static final String HTTP_VERSION = "HTTP/1.";
-    public static final Integer TIME_OUT = 10000;
+    public static final Integer TIME_OUT = 30000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS201 = " 201 Created";
@@ -39,19 +39,28 @@ public class JerryRat implements Runnable {
                     Socket clientSocket = serverSocket.accept();
                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            ){
+            ) {
                 clientSocket.setSoTimeout(TIME_OUT);
                 String request = in.readLine();
                 Response1_0 response = new Response1_0();
 
                 String requestMethod = "GET";
                 String requestURL = "";
+                int requestContentLength = 0;
+                String requestBody = null;
                 label:
                 while (request != null) {
                     String[] req = request.split(" ");
                     String requestHead = req[0];
                     if (request.equals("")) {
-                        break;
+                        if (requestBody == null) {
+                            requestBody = "";
+                            request = in.readLine();
+                            req = request.split(" ");
+                            requestHead = req[0];
+                        } else {
+                            break;
+                        }
                     }
                     switch (requestHead) {
                         case "GET":
@@ -83,6 +92,9 @@ public class JerryRat implements Runnable {
                         case "User-Agent:":
                             getUserAgent(request, response);
                             break;
+                        case "Content-Length:":
+                            requestContentLength = Integer.parseInt(req[1]);
+                            break;
                         case "POST":
                             requestMethod = requestHead;
                             requestURL = req[1];
@@ -105,7 +117,10 @@ public class JerryRat implements Runnable {
                             }
                             break;
                         default:
-                            if (requestMethod.equals("POST") && !requestURL.equals("/endpoints/null")) {
+                            if (req.length < 2 && requestMethod.equals("POST") && requestBody.equals("")) {
+                                if (requestContentLength < request.length()) {
+                                    request = request.substring(0, requestContentLength);
+                                }
                                 FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
                                 BufferedWriter bw = new BufferedWriter(fis);
                                 bw.write(request);
