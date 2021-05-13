@@ -15,6 +15,7 @@ public class JerryRat implements Runnable {
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
     public static final String HTTP_VERSION = "HTTP/1.";
+    public static final Integer TIME_OUT = 10000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS201 = " 201 Created";
@@ -38,7 +39,8 @@ public class JerryRat implements Runnable {
                     Socket clientSocket = serverSocket.accept();
                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            ) {
+            ){
+                clientSocket.setSoTimeout(TIME_OUT);
                 String request = in.readLine();
                 Response1_0 response = new Response1_0();
 
@@ -108,6 +110,7 @@ public class JerryRat implements Runnable {
                                 BufferedWriter bw = new BufferedWriter(fis);
                                 bw.write(request);
                                 bw.flush();
+                                bw.close();
                                 out.print(simpleResponse(STATUS201));
                                 out.flush();
                                 break label;
@@ -209,6 +212,7 @@ public class JerryRat implements Runnable {
         BufferedInputStream bis = new BufferedInputStream(fos);
         byte[] content = new byte[(int) requestFile.length()];
         bis.read(content);
+        bis.close();
         return content;
 
     }
