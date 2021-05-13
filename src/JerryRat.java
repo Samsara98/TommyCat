@@ -14,7 +14,7 @@ public class JerryRat implements Runnable {
 
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
-    public static final String HTTP_VERSION = "HTTP/1.";
+    public static final String HTTP_VERSION = "HTTP/1.0";
     public static final Integer TIME_OUT = 20000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
@@ -71,16 +71,20 @@ public class JerryRat implements Runnable {
                             requestURL = checkRequest(out, req);
                             if (requestURL == null) continue app;
                             requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
-                            if (requestURL.equals("/endpoints/user-agent")) {
-                                response.setEntityBody(new EntityBody(request));
-                                request = in.readLine();
-                                continue;
-                            }
                             File requestFile = new File(WEB_ROOT + requestURL);
                             requestFile = getFileName(out, requestFile);
                             if (requestFile == null) continue app;
                             response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             if ("GET".equals(requestHead)) {
+                                if(requestURL.equals("/favicon.ico")){
+                                    response = simpleResponse(STATUS404);
+                                    break label;
+                                }
+                                if (requestURL.equals("/endpoints/user-agent")) {
+                                    response.setEntityBody(new EntityBody(request));
+                                    request = in.readLine();
+                                    continue;
+                                }
                                 //HTTP 0.9
                                 if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
                                     response = new Response1_0();
@@ -195,11 +199,6 @@ public class JerryRat implements Runnable {
     }
 
     private File getFileName(PrintWriter out, File requestFile) {
-        if (!requestFile.exists()) {
-            out.print(simpleResponse(STATUS404));
-            out.flush();
-            return null;
-        }
         if (requestFile.isDirectory()) {
             requestFile = new File(requestFile, "/index.html");
             if (!requestFile.exists()) {
@@ -207,6 +206,11 @@ public class JerryRat implements Runnable {
                 out.flush();
                 return null;
             }
+        }
+        if (!requestFile.exists()) {
+            out.print(simpleResponse(STATUS404));
+            out.flush();
+            return null;
         }
         return requestFile;
     }
