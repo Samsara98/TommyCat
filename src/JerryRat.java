@@ -50,6 +50,7 @@ public class JerryRat implements Runnable {
                         if (requestURL == null) break;
                         requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                         if (requestURL.equals("/endpoints/user-agent")) {
+                            response.setEntityBody(new EntityBody("/endpoints/user-agent"));
                             continue;
                         }
                         File requestFile = new File(WEB_ROOT + requestURL);
@@ -65,7 +66,7 @@ public class JerryRat implements Runnable {
                         contentType = getRequestFileType(contentType, requestURL, requestFile);
 
                         response = getResponse1_0(statusLine, requestFile, contentType);
-                    } else if (requestHead.equals("User-Agent:")) {
+                    } else if (requestHead.equals("User-Agent:") && response.getEntityBody().toString().equals("/endpoints/user-agent")) {
                         statusLine.setStatusCode(STATUS200);
                         String fieldValue = req[1];
                         response.setEntityBody(new EntityBody(fieldValue));
@@ -152,7 +153,7 @@ public class JerryRat implements Runnable {
         //Last-Modified头
         responseHead.setLastModified(requestFile.lastModified());
         //EntityBody
-        entityBody = new EntityBody(getFileContent(requestFile));
+        entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
         response = new Response1_0(statusLine, responseHead, entityBody);
         return response;
     }
