@@ -2,7 +2,7 @@ import http.EntityBody;
 import http.Response1_0;
 import http.ResponseHead;
 import http.StatusLine;
-import jdk.swing.interop.SwingInterOpUtils;
+import org.w3c.dom.ls.LSOutput;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -15,7 +15,7 @@ public class JerryRat implements Runnable {
 
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
-    public static final String HTTP_VERSION = "HTTP/1.0";
+    public static final String HTTP_VERSION = "HTTP/1.";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS400 = " 400 Bad Request";
     public static final String STATUS404 = " 404 Not Found";
@@ -39,11 +39,11 @@ public class JerryRat implements Runnable {
             ) {
                 String request = in.readLine();
                 Response1_0 response = new Response1_0();
-                while (request!=null) {
+                while (request != null) {
                     StatusLine statusLine = new StatusLine();
                     String[] req = request.split(" ");
                     String requestHead = req[0];
-                    if(request.equals("")){
+                    if (request.equals("")) {
                         break;
                     }
                     if ("GET".equals(requestHead)) {
@@ -54,7 +54,7 @@ public class JerryRat implements Runnable {
                         if (requestURL.equals("/endpoints/user-agent")) {
                             response.setEntityBody(new EntityBody("/endpoints/user-agent"));
                             request = in.readLine();
-                            continue ;
+                            continue;
                         }
                         File requestFile = new File(WEB_ROOT + requestURL);
                         requestFile = getFileName(out, requestFile);
@@ -70,8 +70,9 @@ public class JerryRat implements Runnable {
                         response = getResponse1_0(statusLine, requestFile, contentType);
                     } else if (requestHead.equals("User-Agent:") && response.getEntityBody().toString().equals("/endpoints/user-agent")) {
                         statusLine.setStatusCode(STATUS200);
-                        String fieldValue = req[1];
-                        response.setEntityBody(new EntityBody(fieldValue));
+                        response.setStatusLine(statusLine);
+                        response.setEntityBody(new EntityBody(request.substring(12)));
+                        break;
                     }
 //                    else {
 //                        out.print(getErrorResponse(STATUS400));
@@ -95,15 +96,12 @@ public class JerryRat implements Runnable {
             out.flush();
             return null;
         }
-        StringBuilder requestURL = new StringBuilder(req[1]);
-        int x = req.length - 1;
-        if (req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
-            x = req.length - 2;
-        }
-        if (req.length >= 3) {
-            for (int i = 2; i <= x; i++) {
-                requestURL.append(" ").append(req[i]);
-            }
+        String requestURL = req[1];
+
+        if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+            out.print(getErrorResponse(STATUS400));
+            out.flush();
+            return null;
         }
         return requestURL.toString();
     }
