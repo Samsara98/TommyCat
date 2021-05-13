@@ -85,9 +85,9 @@ public class JerryRat implements Runnable {
                             requestMethod = requestHead;
                             requestURL = req[1];
                             if (requestURL.equals("/endpoints/null")) {
-                                out.print(simpleResponse(STATUS204));
-                                out.flush();
-                                break label;
+                                response = (simpleResponse(STATUS204));
+                                request = in.readLine();
+                                continue;
                             }
                             if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
@@ -98,12 +98,12 @@ public class JerryRat implements Runnable {
                                 if (!postFile.exists()) {
                                     postFile.createNewFile();
                                 }
-                            }else {
+                            } else {
                                 break label;
                             }
                             break;
                         default:
-                            if (requestMethod.equals("POST")) {
+                            if (requestMethod.equals("POST") && !requestURL.equals("/endpoints/null")) {
                                 FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
                                 BufferedWriter bw = new BufferedWriter(fis);
                                 bw.write(request);
