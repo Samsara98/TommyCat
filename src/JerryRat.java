@@ -46,7 +46,7 @@ public class JerryRat implements Runnable {
                     if (request.equals("")) {
                         break;
                     }
-                    if ("GET".equals(requestHead)) {
+                    if ("GET".equals(requestHead) || "HEAD".equals(requestHead)) {
                         String contentType = "";
                         String requestURL = checkRequest(out, req);
                         if (requestURL == null) break;
@@ -61,9 +61,13 @@ public class JerryRat implements Runnable {
                         if (requestFile == null) break;
 
                         //HTTP 0.9
-                        if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
-                            response.setEntityBody(new EntityBody(getFileContent(requestFile)));
-                            break;
+                        if ("GET".equals(requestHead) ) {
+                            if(!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)){
+                                response.setEntityBody(new EntityBody(getFileContent(requestFile)));
+                                break;
+                            }
+                            EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
+                            response.setEntityBody(entityBody);
                         }
                         contentType = getRequestFileType(contentType, requestFile);
 
@@ -145,7 +149,7 @@ public class JerryRat implements Runnable {
     private Response1_0 getResponse1_0(StatusLine statusLine, File requestFile, String contentType) throws IOException {
         ResponseHead responseHead = new ResponseHead();
         Response1_0 response;
-        EntityBody entityBody;
+        EntityBody entityBody = null;
         contentType = getContentType("." + contentType);
         //Status-Line
         statusLine.setStatusCode(STATUS200);
@@ -160,7 +164,6 @@ public class JerryRat implements Runnable {
         //Last-Modified头
         responseHead.setLastModified(requestFile.lastModified());
         //EntityBody
-        entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
         response = new Response1_0(statusLine, responseHead, entityBody);
         return response;
     }
