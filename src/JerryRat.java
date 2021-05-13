@@ -69,6 +69,11 @@ public class JerryRat implements Runnable {
                         case "HEAD":
                             requestMethod = requestHead;
                             requestURL = checkRequest(out, req);
+                            if (requestURL.equals("/endpoints/user-agent")) {
+                                response.setEntityBody(new EntityBody(request));
+                                request = in.readLine();
+                                continue;
+                            }
                             if (requestURL == null) continue app;
                             requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                             File requestFile = new File(WEB_ROOT + requestURL);
@@ -79,11 +84,6 @@ public class JerryRat implements Runnable {
                                 if(requestURL.equals("/favicon.ico")){
                                     response = simpleResponse(STATUS404);
                                     break label;
-                                }
-                                if (requestURL.equals("/endpoints/user-agent")) {
-                                    response.setEntityBody(new EntityBody(request));
-                                    request = in.readLine();
-                                    continue;
                                 }
                                 //HTTP 0.9
                                 if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
