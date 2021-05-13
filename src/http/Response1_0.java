@@ -44,6 +44,6 @@ public class Response1_0 {
         String statusLineS = statusLine == null ? "" : statusLine.toString();
         String responseHeadS = responseHead == null ? "" : responseHead.toString();
         String entityBodyS = entityBody == null ? "" : entityBody.toString();
-        return statusLineS + responseHeadS + "\r\n" + entityBodyS;
+        return statusLineS + responseHeadS + ((entityBodyS.equals("")) ? "" : ("\r\n" + entityBodyS));
     }
 }

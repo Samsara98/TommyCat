@@ -52,7 +52,7 @@ public class JerryRat implements Runnable {
                         if (requestURL == null) break;
                         requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                         if (requestURL.equals("/endpoints/user-agent")) {
-                            response.setEntityBody(new EntityBody("/endpoints/user-agent"));
+                            response.setEntityBody(new EntityBody(request));
                             request = in.readLine();
                             continue;
                         }
@@ -60,9 +60,9 @@ public class JerryRat implements Runnable {
                         requestFile = getFileName(out, requestFile);
                         if (requestFile == null) break;
 
-                        //HTTP 0.9
-                        if ("GET".equals(requestHead) ) {
-                            if(!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)){
+                        if ("GET".equals(requestHead)) {
+                            //HTTP 0.9
+                            if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
                                 response.setEntityBody(new EntityBody(getFileContent(requestFile)));
                                 break;
                             }
@@ -72,21 +72,29 @@ public class JerryRat implements Runnable {
                         contentType = getRequestFileType(contentType, requestFile);
 
                         response = getResponse1_0(statusLine, requestFile, contentType);
-                    } else if (requestHead.equals("User-Agent:") && response.getEntityBody().toString().equals("/endpoints/user-agent")) {
-                        statusLine.setStatusCode(STATUS200);
+                    } else if (requestHead.equals("User-Agent:")) {
+                        if (response.getEntityBody() != null) {
+                            statusLine.setStatusCode(STATUS200);
 
-                        String fieldValue = request.substring(12);
+                            String fieldValue = request.substring(12);
 
-                        ResponseHead responseHead = new ResponseHead();
-                        responseHead.setDate(new Date());
-                        responseHead.setServer("JerryRat/1.0 (Linux)");
-                        responseHead.setContentLength(fieldValue.getBytes().length);
-                        responseHead.setContentType("text/plain");
+                            ResponseHead responseHead = new ResponseHead();
+                            responseHead.setDate(new Date());
+                            responseHead.setServer("JerryRat/1.0 (Linux)");
+                            responseHead.setContentLength(fieldValue.getBytes().length);
+                            responseHead.setContentType("text/plain");
 
-                        response.setStatusLine(statusLine);
-                        response.setResponseHead(responseHead);
-                        response.setEntityBody(new EntityBody(fieldValue));
-                        break;
+                            response.setStatusLine(statusLine);
+                            response.setResponseHead(responseHead);
+                            if (response.getEntityBody().toString().startsWith("GET")) {
+                                response.setEntityBody(new EntityBody(request.substring(12)));
+                                continue;
+                            }else {
+                                response.setEntityBody(null);
+                                continue;
+                            }
+                        }
+
                     }
 //                    else {
 //                        out.print(getErrorResponse(STATUS400));
