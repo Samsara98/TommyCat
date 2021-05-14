@@ -113,19 +113,6 @@ public class JerryRat implements Runnable {
                             if (requestURL.equals("/endpoints/null")) {
                                 response = (simpleResponse(STATUS204));
 //                                request = in.readLine();
-                                break;
-                            }
-                            if (requestURL.startsWith("/emails")) {
-                                File dir = new File(WEB_ROOT, "/emails");
-                                if (!dir.exists()) {
-                                    dir.mkdirs();
-                                }
-                                File postFile = new File(WEB_ROOT, requestURL);
-                                if (!postFile.exists()) {
-                                    postFile.createNewFile();
-                                }
-                            } else {
-                                break label;
                             }
                             break;
                         default:
@@ -139,6 +126,18 @@ public class JerryRat implements Runnable {
                                 }
                                 if (requestContentLength < request.length()) {
                                     request = request.substring(0, requestContentLength);
+                                }
+                                if (requestURL.startsWith("/emails")) {
+                                    File dir = new File(WEB_ROOT, "/emails");
+                                    if (!dir.exists()) {
+                                        dir.mkdirs();
+                                    }
+                                    File postFile = new File(WEB_ROOT, requestURL);
+                                    if (!postFile.exists()) {
+                                        postFile.createNewFile();
+                                    }
+                                } else {
+                                    break label;
                                 }
                                 FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
                                 BufferedWriter bw = new BufferedWriter(fis);
