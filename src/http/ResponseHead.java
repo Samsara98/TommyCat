@@ -10,6 +10,7 @@ public class ResponseHead {
     long contentLength;
     String contentType;
     String location;
+    String WWWAuthenticate;
     Date lastModified;
 
     public Date getDate() {
@@ -60,6 +61,14 @@ public class ResponseHead {
         this.location = location;
     }
 
+    public String getWWWAuthenticate() {
+        return WWWAuthenticate;
+    }
+
+    public void setWWWAuthenticate(String WWWAuthenticate) {
+        this.WWWAuthenticate = WWWAuthenticate;
+    }
+
     public ResponseHead() {
         this.date = new Date();
     }
@@ -72,6 +81,7 @@ public class ResponseHead {
                 ("Server: " + server + "\r\n") +
                 ("Content-Length: " + contentLength + "\r\n") +
                 ((location == null) ? "" : ("Location: " + location + "\r\n") )+
+                ((WWWAuthenticate == null) ? "" : ("WWW-Authenticate: " + WWWAuthenticate + "\r\n") )+
                 ((contentType == null) ? "" : ("Content-Type: " + contentType + "\r\n")) +
                 ((lastModified == null) ? "" : ("Last-Modified: " + sdf.format(lastModified) + "\r\n"));
     }

@@ -22,6 +22,8 @@ public class JerryRat implements Runnable {
     public static final String STATUS204 = "204 No Content";
     public static final String STATUS301 = "301 Moved Permanently";
     public static final String STATUS400 = "400 Bad Request";
+    public static final String STATUS401 = "401 Unauthorized";
+    public static final String STATUS403 = "403 Forbidden";
     public static final String STATUS404 = "404 Not Found";
     public static final String STATUS501 = "501 Not Implemented";
     public Map<String, String> map;
@@ -47,7 +49,8 @@ public class JerryRat implements Runnable {
                 Response1_0 response = simpleResponse(STATUS200);
 
                 String requestMethod = "";
-                String requestURL = "";
+                String requestURL = null;
+                String authorization = null;
                 int requestContentLength = -1;
 
                 String[] req = request.split(" ");
@@ -70,7 +73,7 @@ public class JerryRat implements Runnable {
                             requestURL = "http://localhost/";
                             response.getStatusLine().setStatusCode(STATUS301);
                             response.getResponseHead().setLocation(requestURL);
-                            break ;
+                            break;
                         }
                         //400
                         if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
@@ -109,7 +112,6 @@ public class JerryRat implements Runnable {
                         break;
                 }
                 request = in.readLine();
-
                 label:
                 while (request != null) {
                     req = request.split(" ");
@@ -123,8 +125,7 @@ public class JerryRat implements Runnable {
                             if (requestURL.equals("/endpoints/null")) {
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
                                 break;
-                            }
-                            if (requestURL.startsWith("/emails")) {
+                            } else if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
                                 if (!dir.exists()) {
                                     dir.mkdirs();
@@ -134,6 +135,15 @@ public class JerryRat implements Runnable {
                                     postFile.createNewFile();
                                 }
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
+                            }
+                        } else if (requestURL.equals("/secret.txt")) {
+                            if (authorization != null && !authorization.equals("hello:world")) {
+                                response = simpleResponse(STATUS403);
+                                response.setEntityBody(null);
+                            } else if (authorization == null) {
+                                response = simpleResponse(STATUS401);
+                                response.setEntityBody(null);
+                                response.getResponseHead().setWWWAuthenticate("Basic realm=\"adalab\"");
                             }
                         }
                         break;
@@ -149,6 +159,9 @@ public class JerryRat implements Runnable {
                             break;
                         case "Content-Length:":
                             requestContentLength = Integer.parseInt(req[1]);
+                            break;
+                        case "Authorization:":
+                            authorization = new String(Base64.getDecoder().decode(req[2]));
                             break;
                         default:
                             break;
