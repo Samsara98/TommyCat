@@ -47,7 +47,7 @@ public class JerryRat implements Runnable {
                 String requestMethod = "GET";
                 String requestURL = "";
                 int requestContentLength = -1;
-                String requestBody = null;
+                StringBuilder requestBody = null;
                 label:
                 while (request != null) {
                     request = URLDecoder.decode(request, StandardCharsets.UTF_8);
@@ -56,12 +56,36 @@ public class JerryRat implements Runnable {
 //                    httpVersion = req[req.length-1];
                     if (request.equals("")) {
                         if (requestMethod.equals("POST") && requestBody == null) {
-                            requestBody = "";
-                            request = in.readLine();
-                            continue;
-                        } else {
-                            break;
+
+                            if (requestContentLength <= 0) {
+                                response = simpleResponse(STATUS400);
+                            }
+                            if (requestURL.startsWith("/emails")) {
+                                File dir = new File(WEB_ROOT, "/emails");
+                                if (!dir.exists()) {
+                                    dir.mkdirs();
+                                }
+                                File postFile = new File(WEB_ROOT, requestURL);
+                                if (!postFile.exists()) {
+                                    postFile.createNewFile();
+                                }
+                                requestBody = new StringBuilder();
+
+                                String body = in.readLine() + "\r\n";
+                                while (requestBody.length() < requestContentLength) {
+                                    requestBody.append(body);
+                                    body = in.readLine() + "\r\n";
+                                }
+                                body = requestBody.substring(0,10);
+                                FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
+                                BufferedWriter bw = new BufferedWriter(fis);
+                                bw.write(body);
+                                bw.flush();
+                                bw.close();
+                                response = simpleResponse(STATUS201);
+                            }
                         }
+                        break;
                     }
                     switch (requestHead) {
                         case "GET":
@@ -119,32 +143,6 @@ public class JerryRat implements Runnable {
                                 if (requestURL.equals("/endpoints/null")) {
                                     break label;
                                 }
-                                if (requestContentLength <= 0) {
-                                    response = simpleResponse(STATUS400);
-                                    break label;
-                                }
-                                if (requestContentLength < request.length()) {
-                                    request = request.substring(0, requestContentLength);
-                                }
-                                if (requestURL.startsWith("/emails")) {
-                                    File dir = new File(WEB_ROOT, "/emails");
-                                    if (!dir.exists()) {
-                                        dir.mkdirs();
-                                    }
-                                    File postFile = new File(WEB_ROOT, requestURL);
-                                    if (!postFile.exists()) {
-                                        postFile.createNewFile();
-                                    }
-                                } else {
-                                    break label;
-                                }
-                                FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
-                                BufferedWriter bw = new BufferedWriter(fis);
-                                bw.write(request);
-                                bw.flush();
-                                bw.close();
-                                response = simpleResponse(STATUS201);
-                                break label;
                             }
                             break;
                     }
