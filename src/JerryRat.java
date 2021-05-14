@@ -96,8 +96,10 @@ public class JerryRat implements Runnable {
                                     out.flush();
                                     continue app;
                                 }
+
                                 EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
                                 response.setEntityBody(entityBody);
+
                             }
                             break;
                         case "User-Agent:":
@@ -157,7 +159,6 @@ public class JerryRat implements Runnable {
 //                    }
                     request = in.readLine();
                 }
-                response.getResponseHead().setDate(new Date());
                 out.print(response);
                 out.flush();
             } catch (IOException e) {
