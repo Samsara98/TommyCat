@@ -17,11 +17,13 @@ public class JerryRat implements Runnable {
     public static final String HTTP_VERSION = "HTTP/";
     public static final Integer TIME_OUT = 10000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
-    public static final String STATUS200 = " 200 OK";
-    public static final String STATUS201 = " 201 Created";
-    public static final String STATUS204 = " 204 No Content";
-    public static final String STATUS400 = " 400 Bad Request";
-    public static final String STATUS404 = " 404 Not Found";
+    public static final String STATUS200 = "200 OK";
+    public static final String STATUS201 = "201 Created";
+    public static final String STATUS204 = "204 No Content";
+    public static final String STATUS301 = "301 Moved Permanently";
+    public static final String STATUS400 = "400 Bad Request";
+    public static final String STATUS404 = "404 Not Found";
+    public static final String STATUS501 = "501 Not Implemented";
     public Map<String, String> map;
 
 
@@ -47,14 +49,75 @@ public class JerryRat implements Runnable {
                 String requestMethod = "";
                 String requestURL = "";
                 int requestContentLength = -1;
+
+                String[] req = request.split(" ");
+                if (req.length <= 1) {
+                    response = simpleResponse(STATUS400);
+                    out.print(response);
+                    out.flush();
+                    continue;
+                }
+                String requestHead = req[0];
+                requestURL = req[1];
+                requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
+
+                //请求方法
+                switch (requestHead) {
+                    case "GET":
+                    case "HEAD":
+                        requestMethod = requestHead;
+                        if (requestURL.startsWith("/endpoints/redirect")) {
+                            requestURL = requestURL.substring(19);
+                            response.getStatusLine().setStatusCode(STATUS301);
+                            break;
+                        }
+                        //400
+                        if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+                            response.getStatusLine().setStatusCode(STATUS400);
+                            break;
+                        }
+
+                        //404
+                        File requestFile = new File(WEB_ROOT + requestURL);
+                        requestFile = getFileName(requestFile);
+                        if (!requestFile.exists()) {
+                            response.getStatusLine().setStatusCode(STATUS404);
+                            break;
+                        }
+
+                        //GET 返回body
+                        response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
+                        if (requestMethod.equals("GET")) {
+                            //HTTP 0.9
+                            if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+                                response = new Response1_0();
+                                response.setEntityBody(new EntityBody(getFileContent(requestFile)));
+                                out.print(response);
+                                out.flush();
+                                continue app;
+                            }
+                            EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
+                            response.setEntityBody(entityBody);
+                        }
+                        break;
+                    case "POST":
+                        requestMethod = requestHead;
+                        break;
+                    default:
+                        response.getStatusLine().setStatusCode(STATUS501);
+                        break;
+                }
+                request = in.readLine();
+
                 label:
                 while (request != null) {
-                    String[] req = request.split(" ");
-                    String requestHead = req[0];
+                    req = request.split(" ");
+                    requestHead = req[0];
                     if (request.equals("")) {
                         if (requestMethod.equals("POST")) {
                             if (requestContentLength <= 0) {
-                                response = simpleResponse(STATUS400);
+                                response.getStatusLine().setStatusCode(STATUS400);
+                                break;
                             }
                             if (requestURL.equals("/endpoints/null")) {
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
@@ -75,43 +138,10 @@ public class JerryRat implements Runnable {
                         break;
                     }
                     switch (requestHead) {
-                        case "GET":
-                        case "HEAD":
-                            requestMethod = requestHead;
-                            requestURL = req[1];
-                            requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
-                            if (requestURL.equals("/endpoints/user-agent")) {
-                                request = in.readLine();
-                                continue;
-                            }
-                            if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
-                                response = simpleResponse(STATUS400);
-                                break label;
-                            }
-                            File requestFile = new File(WEB_ROOT + requestURL);
-                            requestFile = getFileName(requestFile);
-                            if (!requestFile.exists()) {
-                                response = simpleResponse(STATUS404);
-                                request = in.readLine();
-                                continue;
-                            }
-                            response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
-                            if (requestMethod.equals("GET")) {
-                                //HTTP 0.9
-                                if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
-                                    response = new Response1_0();
-                                    response.setEntityBody(new EntityBody(getFileContent(requestFile)));
-                                    out.print(response);
-                                    out.flush();
-                                    continue app;
-                                }
-                                EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
-                                response.setEntityBody(entityBody);
-                            }
-                            break;
                         case "User-Agent:":
                             if (requestMethod.equals("GET") && requestURL.equals("/endpoints/user-agent")) {
                                 String fieldValue = request.substring(12);
+                                response.getStatusLine().setStatusCode(STATUS200);
                                 response.getResponseHead().setContentLength(fieldValue.getBytes().length);
                                 response.setEntityBody(new EntityBody(request.substring(12)));
                             }
@@ -119,25 +149,12 @@ public class JerryRat implements Runnable {
                         case "Content-Length:":
                             requestContentLength = Integer.parseInt(req[1]);
                             break;
-                        case "POST":
-                            requestMethod = requestHead;
-                            requestURL = req[1];
-                            requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
-//                            if (requestURL.equals("/endpoints/null")) {
-//                                response = (simpleResponse(STATUS204));
-////                                request = in.readLine();
-//                            }
-                            break;
                         default:
                             break;
                     }
-//                    else {
-//                        out.print(getErrorResponse(STATUS400));
-//                        out.flush();
-//                        break;
-//                    }
                     request = in.readLine();
                 }
+                System.out.println(response.getStatusLine().getStatusCode());
                 out.print(response);
                 out.flush();
             } catch (IOException e) {
@@ -149,7 +166,6 @@ public class JerryRat implements Runnable {
     }
 
     private Response1_0 POSTMethodResponse(BufferedReader in, String requestURL, int requestContentLength) throws IOException {
-        Response1_0 response = null;
         char[] chars = new char[requestContentLength];
         in.read(chars);
         if (requestURL.startsWith("/emails")) {
@@ -158,11 +174,11 @@ public class JerryRat implements Runnable {
             bw.write(chars);
             bw.flush();
             bw.close();
-            response = simpleResponse(STATUS201);
+            return simpleResponse(STATUS201);
         } else if (requestURL.equals("/endpoints/null")) {
-            response = simpleResponse(STATUS204);
+            return simpleResponse(STATUS204);
         }
-        return response;
+        return simpleResponse(STATUS200);
     }
 
     private String getRequestFileType(File requestFile) {
@@ -246,7 +262,7 @@ public class JerryRat implements Runnable {
         ResponseHead responseHead = new ResponseHead();
         responseHead.setServer(SERVER);
         responseHead.setContentLength(0);
-        responseHead.setContentType("text/plain");
+        responseHead.setContentType("text/plain; charset=utf-8");
 
         response1_0.setStatusLine(statusLine);
         response1_0.setResponseHead(responseHead);
