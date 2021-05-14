@@ -44,21 +44,23 @@ public class JerryRat implements Runnable {
                 String request = in.readLine();
                 Response1_0 response = simpleResponse(STATUS200);
 
-                String requestMethod = "GET";
+                String requestMethod = "";
                 String requestURL = "";
                 int requestContentLength = -1;
                 StringBuilder requestBody = null;
                 label:
                 while (request != null) {
-                    request = URLDecoder.decode(request, StandardCharsets.UTF_8);
+                    System.out.println("request:"+request);
                     String[] req = request.split(" ");
                     String requestHead = req[0];
-//                    httpVersion = req[req.length-1];
                     if (request.equals("")) {
-                        if (requestMethod.equals("POST") && requestBody == null) {
+                        if (requestMethod.equals("POST")) {
 
                             if (requestContentLength <= 0) {
                                 response = simpleResponse(STATUS400);
+                            }
+                            if (requestURL.equals("/endpoints/null")) {
+                                response = POSTMethodResponse(in, requestURL, requestContentLength);
                             }
                             if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
@@ -69,20 +71,7 @@ public class JerryRat implements Runnable {
                                 if (!postFile.exists()) {
                                     postFile.createNewFile();
                                 }
-                                requestBody = new StringBuilder();
-
-                                String body = in.readLine() + "\r\n";
-                                while (requestBody.length() < requestContentLength) {
-                                    requestBody.append(body);
-                                    body = in.readLine() + "\r\n";
-                                }
-                                body = requestBody.substring(0,10);
-                                FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
-                                BufferedWriter bw = new BufferedWriter(fis);
-                                bw.write(body);
-                                bw.flush();
-                                bw.close();
-                                response = simpleResponse(STATUS201);
+                                response = POSTMethodResponse(in, requestURL, requestContentLength);
                             }
                         }
                         break;
@@ -92,8 +81,8 @@ public class JerryRat implements Runnable {
                         case "HEAD":
                             requestMethod = requestHead;
                             requestURL = req[1];
+                            requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
                             if (requestURL.equals("/endpoints/user-agent")) {
-                                response.setEntityBody(new EntityBody(request));
                                 request = in.readLine();
                                 continue;
                             }
@@ -105,7 +94,8 @@ public class JerryRat implements Runnable {
                             requestFile = getFileName(requestFile);
                             if (!requestFile.exists()) {
                                 response = simpleResponse(STATUS404);
-                                break label;
+                                request = in.readLine();
+                                continue ;
                             }
                             response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             if (requestMethod.equals("GET")) {
@@ -117,14 +107,18 @@ public class JerryRat implements Runnable {
                                     out.flush();
                                     continue app;
                                 }
-
                                 EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
+
                                 response.setEntityBody(entityBody);
 
                             }
                             break;
                         case "User-Agent:":
-                            getUserAgent(request, response);
+                            if (requestMethod.equals("GET") && requestURL.equals("/endpoints/user-agent")) {
+                                String fieldValue = request.substring(12);
+                                response.getResponseHead().setContentLength(fieldValue.getBytes().length);
+                                response.setEntityBody(new EntityBody(request.substring(12)));
+                            }
                             break;
                         case "Content-Length:":
                             requestContentLength = Integer.parseInt(req[1]);
@@ -139,11 +133,6 @@ public class JerryRat implements Runnable {
                             }
                             break;
                         default:
-                            if (req.length < 2 && requestMethod.equals("POST") && requestBody.equals("")) {
-                                if (requestURL.equals("/endpoints/null")) {
-                                    break label;
-                                }
-                            }
                             break;
                     }
 //                    else {
@@ -163,16 +152,26 @@ public class JerryRat implements Runnable {
 
     }
 
+    private Response1_0 POSTMethodResponse(BufferedReader in, String requestURL, int requestContentLength) throws IOException {
+        Response1_0 response = null;
+        char[] chars = new char[requestContentLength];
+        in.read(chars);
+        if(requestURL.startsWith("/emails")){
+            FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
+            BufferedWriter bw = new BufferedWriter(fis);
+            bw.write(chars);
+            bw.flush();
+            bw.close();
+            response = simpleResponse(STATUS201);
+        }else if(requestURL.equals("/endpoints/null")){
+            response = simpleResponse(STATUS204);
+        }
+        return response;
+    }
+
     private void getUserAgent(String request, Response1_0 response) {
         if (response.getEntityBody() != null) {
-            String fieldValue = request.substring(12);
-            response.getResponseHead().setContentLength(fieldValue.getBytes().length);
 
-            if (response.getEntityBody().toString().startsWith("GET")) {
-                response.setEntityBody(new EntityBody(request.substring(12)));
-            } else {
-                response.setEntityBody(null);
-            }
         }
     }
 
