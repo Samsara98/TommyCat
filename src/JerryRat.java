@@ -15,7 +15,7 @@ public class JerryRat implements Runnable {
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
     public static final String HTTP_VERSION = "HTTP/";
-    public static final Integer TIME_OUT = 50000;
+    public static final Integer TIME_OUT = 10000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS201 = " 201 Created";
