@@ -138,10 +138,10 @@ public class JerryRat implements Runnable {
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
                             }
                         } else if (requestURL.equals("/secret.txt")) {
-                            if (basic.equals("Basic") && !authorization.equals("hello:world")) {
+                            if (basic != null && basic.equals("Basic") && !authorization.equals("hello:world")) {
                                 response = simpleResponse(STATUS403);
                                 response.setEntityBody(null);
-                            } else if (authorization == null || !basic.equals("Basic")) {
+                            } else if (authorization == null || basic != null && !basic.equals("Basic")) {
                                 response = simpleResponse(STATUS401);
                                 response.setEntityBody(null);
                                 response.getResponseHead().setWWWAuthenticate("Basic realm=\"adalab\"");
