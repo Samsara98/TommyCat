@@ -71,7 +71,7 @@ public class ResponseHead {
         return ("Date: " + sdf.format(date) + "\r\n") +
                 ("Server: " + server + "\r\n") +
                 ("Content-Length: " + contentLength + "\r\n") +
-                ("Location: " + location + "\r\n")+
+                ((location == null) ? "" : ("Location: " + location + "\r\n") )+
                 ((contentType == null) ? "" : ("Content-Type: " + contentType + "\r\n")) +
                 ((lastModified == null) ? "" : ("Last-Modified: " + sdf.format(lastModified) + "\r\n"));
     }

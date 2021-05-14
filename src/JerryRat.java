@@ -263,7 +263,7 @@ public class JerryRat implements Runnable {
         ResponseHead responseHead = new ResponseHead();
         responseHead.setServer(SERVER);
         responseHead.setContentLength(0);
-        responseHead.setContentType("text/plain; charset=utf-8");
+//        responseHead.setContentType("text/plain; charset=utf-8");
 
         response1_0.setStatusLine(statusLine);
         response1_0.setResponseHead(responseHead);
