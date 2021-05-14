@@ -14,7 +14,7 @@ public class JerryRat implements Runnable {
 
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
-    public static final String HTTP_VERSION = "HTTP/1.0";
+    public static final String HTTP_VERSION = "HTTP/";
     public static final Integer TIME_OUT = 20000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
@@ -46,11 +46,11 @@ public class JerryRat implements Runnable {
 
                 String requestMethod = "GET";
                 String requestURL = "";
-//                String httpVersion = "";
                 int requestContentLength = -1;
                 String requestBody = null;
                 label:
                 while (request != null) {
+                    request = URLDecoder.decode(request, StandardCharsets.UTF_8);
                     String[] req = request.split(" ");
                     String requestHead = req[0];
 //                    httpVersion = req[req.length-1];
@@ -68,23 +68,26 @@ public class JerryRat implements Runnable {
                         case "GET":
                         case "HEAD":
                             requestMethod = requestHead;
-                            requestURL = checkRequest(out, req);
+                            requestURL = req[1];
                             if (requestURL.equals("/endpoints/user-agent")) {
                                 response.setEntityBody(new EntityBody(request));
                                 request = in.readLine();
                                 continue;
                             }
-                            if (requestURL == null) continue app;
-                            requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
+                            if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
+                                response = simpleResponse(STATUS400);
+                                request = in.readLine();
+                                continue;
+                            }
                             File requestFile = new File(WEB_ROOT + requestURL);
-                            requestFile = getFileName(out, requestFile);
-                            if (requestFile == null) continue app;
+                            requestFile = getFileName(requestFile);
+                            if (!requestFile.exists()) {
+                                response = simpleResponse(STATUS404);
+                                request = in.readLine();
+                                continue;
+                            }
                             response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
-                            if ("GET".equals(requestHead)) {
-                                if(requestURL.equals("/favicon.ico")){
-                                    response = simpleResponse(STATUS404);
-                                    break label;
-                                }
+                            if (requestMethod.equals("GET")) {
                                 //HTTP 0.9
                                 if (!req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
                                     response = new Response1_0();
@@ -110,7 +113,7 @@ public class JerryRat implements Runnable {
                             if (requestURL.equals("/endpoints/null")) {
                                 response = (simpleResponse(STATUS204));
 //                                request = in.readLine();
-                                break ;
+                                break;
                             }
                             if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
@@ -126,8 +129,8 @@ public class JerryRat implements Runnable {
                             }
                             break;
                         default:
-                            if (req.length < 2 && requestMethod.equals("POST") && requestBody.equals("") ) {
-                                if(requestURL.equals("/endpoints/null")){
+                            if (req.length < 2 && requestMethod.equals("POST") && requestBody.equals("")) {
+                                if (requestURL.equals("/endpoints/null")) {
                                     break label;
                                 }
                                 if (requestContentLength <= 0) {
@@ -178,17 +181,6 @@ public class JerryRat implements Runnable {
         }
     }
 
-    private String checkRequest(PrintWriter out, String[] req) {
-        String requestURL = req[1];
-
-        if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
-            out.print(simpleResponse(STATUS400));
-            out.flush();
-            return null;
-        }
-        return requestURL;
-    }
-
     private String getRequestFileType(File requestFile) {
         String[] urls = requestFile.getName().split("\\.");
         int length = urls.length;
@@ -198,19 +190,9 @@ public class JerryRat implements Runnable {
         return "";
     }
 
-    private File getFileName(PrintWriter out, File requestFile) {
+    private File getFileName(File requestFile) {
         if (requestFile.isDirectory()) {
             requestFile = new File(requestFile, "/index.html");
-            if (!requestFile.exists()) {
-                out.print(simpleResponse(STATUS404));
-                out.flush();
-                return null;
-            }
-        }
-        if (!requestFile.exists()) {
-            out.print(simpleResponse(STATUS404));
-            out.flush();
-            return null;
         }
         return requestFile;
     }
