@@ -15,7 +15,7 @@ public class JerryRat implements Runnable {
     public static final String SERVER_PORT = "8080";
     public static final String WEB_ROOT = "res/webroot";
     public static final String HTTP_VERSION = "HTTP/";
-    public static final Integer TIME_OUT = 20000;
+    public static final Integer TIME_OUT = 5000;
     public static final String SERVER = "JerryRat/1.0 (Linux)";
     public static final String STATUS200 = " 200 OK";
     public static final String STATUS201 = " 201 Created";
@@ -127,10 +127,10 @@ public class JerryRat implements Runnable {
                             requestMethod = requestHead;
                             requestURL = req[1];
                             requestURL = URLDecoder.decode(requestURL, StandardCharsets.UTF_8);
-                            if (requestURL.equals("/endpoints/null")) {
-                                response = (simpleResponse(STATUS204));
-//                                request = in.readLine();
-                            }
+//                            if (requestURL.equals("/endpoints/null")) {
+//                                response = (simpleResponse(STATUS204));
+////                                request = in.readLine();
+//                            }
                             break;
                         default:
                             break;
