@@ -47,21 +47,18 @@ public class JerryRat implements Runnable {
                 String requestMethod = "";
                 String requestURL = "";
                 int requestContentLength = -1;
-                StringBuilder requestBody = null;
                 label:
                 while (request != null) {
-                    System.out.println("request:"+request);
                     String[] req = request.split(" ");
                     String requestHead = req[0];
                     if (request.equals("")) {
                         if (requestMethod.equals("POST")) {
-
                             if (requestContentLength <= 0) {
                                 response = simpleResponse(STATUS400);
                             }
                             if (requestURL.equals("/endpoints/null")) {
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
-                                break  ;
+                                break;
                             }
                             if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
@@ -96,7 +93,7 @@ public class JerryRat implements Runnable {
                             if (!requestFile.exists()) {
                                 response = simpleResponse(STATUS404);
                                 request = in.readLine();
-                                continue ;
+                                continue;
                             }
                             response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             if (requestMethod.equals("GET")) {
@@ -109,9 +106,7 @@ public class JerryRat implements Runnable {
                                     continue app;
                                 }
                                 EntityBody entityBody = new EntityBody<>(new String(getFileContent(requestFile), StandardCharsets.UTF_8));
-
                                 response.setEntityBody(entityBody);
-
                             }
                             break;
                         case "User-Agent:":
@@ -157,23 +152,17 @@ public class JerryRat implements Runnable {
         Response1_0 response = null;
         char[] chars = new char[requestContentLength];
         in.read(chars);
-        if(requestURL.startsWith("/emails")){
+        if (requestURL.startsWith("/emails")) {
             FileWriter fis = new FileWriter(WEB_ROOT + requestURL);
             BufferedWriter bw = new BufferedWriter(fis);
             bw.write(chars);
             bw.flush();
             bw.close();
             response = simpleResponse(STATUS201);
-        }else if(requestURL.equals("/endpoints/null")){
+        } else if (requestURL.equals("/endpoints/null")) {
             response = simpleResponse(STATUS204);
         }
         return response;
-    }
-
-    private void getUserAgent(String request, Response1_0 response) {
-        if (response.getEntityBody() != null) {
-
-        }
     }
 
     private String getRequestFileType(File requestFile) {
