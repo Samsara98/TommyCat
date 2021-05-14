@@ -51,6 +51,7 @@ public class JerryRat implements Runnable {
                 String requestMethod = "";
                 String requestURL = null;
                 String authorization = null;
+                String basic = null;
                 int requestContentLength = -1;
 
                 String[] req = request.split(" ");
@@ -137,10 +138,10 @@ public class JerryRat implements Runnable {
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
                             }
                         } else if (requestURL.equals("/secret.txt")) {
-                            if (authorization != null && !authorization.equals("hello:world")) {
+                            if (basic.equals("Basic") && !authorization.equals("hello:world")) {
                                 response = simpleResponse(STATUS403);
                                 response.setEntityBody(null);
-                            } else if (authorization == null) {
+                            } else if (authorization == null || !basic.equals("Basic")) {
                                 response = simpleResponse(STATUS401);
                                 response.setEntityBody(null);
                                 response.getResponseHead().setWWWAuthenticate("Basic realm=\"adalab\"");
@@ -161,6 +162,7 @@ public class JerryRat implements Runnable {
                             requestContentLength = Integer.parseInt(req[1]);
                             break;
                         case "Authorization:":
+                            basic = req[1];
                             authorization = new String(Base64.getDecoder().decode(req[2]), StandardCharsets.UTF_8);
                             break;
                         default:
