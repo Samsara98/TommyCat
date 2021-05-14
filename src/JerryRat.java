@@ -76,15 +76,13 @@ public class JerryRat implements Runnable {
                             }
                             if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {
                                 response = simpleResponse(STATUS400);
-                                request = in.readLine();
-                                continue;
+                                break label;
                             }
                             File requestFile = new File(WEB_ROOT + requestURL);
                             requestFile = getFileName(requestFile);
                             if (!requestFile.exists()) {
                                 response = simpleResponse(STATUS404);
-                                request = in.readLine();
-                                continue;
+                                break label;
                             }
                             response = GETMethodResponse(requestFile, getRequestFileType(requestFile));
                             if (requestMethod.equals("GET")) {
