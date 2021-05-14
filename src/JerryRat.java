@@ -61,6 +61,7 @@ public class JerryRat implements Runnable {
                             }
                             if (requestURL.equals("/endpoints/null")) {
                                 response = POSTMethodResponse(in, requestURL, requestContentLength);
+                                break  ;
                             }
                             if (requestURL.startsWith("/emails")) {
                                 File dir = new File(WEB_ROOT, "/emails");
