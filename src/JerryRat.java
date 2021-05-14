@@ -161,7 +161,7 @@ public class JerryRat implements Runnable {
                             requestContentLength = Integer.parseInt(req[1]);
                             break;
                         case "Authorization:":
-                            authorization = new String(Base64.getDecoder().decode(req[2]));
+                            authorization = new String(Base64.getDecoder().decode(req[2]), StandardCharsets.UTF_8);
                             break;
                         default:
                             break;
