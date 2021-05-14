@@ -67,9 +67,10 @@ public class JerryRat implements Runnable {
                     case "HEAD":
                         requestMethod = requestHead;
                         if (requestURL.startsWith("/endpoints/redirect")) {
-                            requestURL = requestURL.substring(19);
+                            requestURL = "http://localhost/";
                             response.getStatusLine().setStatusCode(STATUS301);
-                            break;
+                            response.getResponseHead().setLocation(requestURL);
+                            break ;
                         }
                         //400
                         if (req.length >= 3 && !req[req.length - 1].toUpperCase(Locale.ROOT).startsWith(HTTP_VERSION)) {

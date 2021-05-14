@@ -9,6 +9,7 @@ public class ResponseHead {
     String server;
     long contentLength;
     String contentType;
+    String location;
     Date lastModified;
 
     public Date getDate() {
@@ -51,6 +52,14 @@ public class ResponseHead {
         this.lastModified = new Date(lastModified);
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public ResponseHead() {
         this.date = new Date();
     }
@@ -62,6 +71,7 @@ public class ResponseHead {
         return ("Date: " + sdf.format(date) + "\r\n") +
                 ("Server: " + server + "\r\n") +
                 ("Content-Length: " + contentLength + "\r\n") +
+                ("Location: " + location + "\r\n")+
                 ((contentType == null) ? "" : ("Content-Type: " + contentType + "\r\n")) +
                 ((lastModified == null) ? "" : ("Last-Modified: " + sdf.format(lastModified) + "\r\n"));
     }
