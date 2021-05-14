@@ -58,8 +58,7 @@ public class JerryRat implements Runnable {
                         if (requestMethod.equals("POST") && requestBody == null) {
                             requestBody = "";
                             request = in.readLine();
-                            req = request.split(" ");
-                            requestHead = req[0];
+                            continue;
                         } else {
                             break;
                         }
